@@ -1,0 +1,44 @@
+body {
+	font-family: Arial, sans-serif;
+	font-size: 9pt;
+}
+
+h1 {
+	font-size: 16pt;
+	font-weight: normal;
+}
+
+h2 {
+	font-size: 12pt;
+	font-weight: normal;
+	margin-top: 0.25em;
+}
+
+label {
+	color: #666666;
+	text-align: right;
+}
+
+.textField {
+	width: 400px;
+	margin-bottom: 1em;
+}
+
+.error {
+	color: red;
+	padding-top: 0.5em;
+	padding-bottom: 0.5em;
+}
+
+.buttonBox {
+	margin-top: 1em;
+}
+
+label.loginLabel{display:block;font-size:16px;text-align:center;margin-top:10px;margin-bottom:5px;color:white;}
+
+form table th {
+	text-align: right;
+}
+
+
+div#bwlLogin label.labelText{left: 0%;font-size:16px;font-weight:bold;}
