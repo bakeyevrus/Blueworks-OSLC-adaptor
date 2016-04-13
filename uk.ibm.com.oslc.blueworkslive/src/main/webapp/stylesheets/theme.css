@@ -1,0 +1,79 @@
+body {
+	font-family: Arial, sans-serif;
+	font-size: 9pt;
+}
+
+h1 {
+	font-size: 16pt;
+	font-weight: normal;
+}
+
+h2 {
+	font-size: 12pt;
+	font-weight: normal;
+	margin-top: 0.25em;
+}
+
+label {
+	color: #666666;
+	text-align: right;
+}
+
+.textField {
+	width: 400px;
+	margin-bottom: 1em;
+}
+
+.error {
+	color: red;
+	padding-top: 0.5em;
+	padding-bottom: 0.5em;
+}
+
+.buttonBox {
+	margin-top: 1em;
+}
+
+form table th {
+	text-align: right;
+}
+
+div#bwlLogin {
+	background-color: white;
+	position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 500px;
+    height: 300px;
+    margin-left: -250px;
+    margin-top: -150px;
+}
+
+div#bwlPanelLogin {
+	float: left;
+	padding: 30px;
+}
+
+div#bwlRequirementProperties {
+	background-color: white;
+	position: absolute;
+    padding: 30px;
+}
+
+
+
+div#searchContents {
+    padding: 20px;
+}
+
+div#bwlLogin label.labelText{left: 0%;font-size:12px;font-weight:bold;}
+div#bwlRequirementProperties label.headingText{left: 0%;font-size:14px;font-weight:bold;}
+div#bwlRequirementProperties label.labelText{left: 0%;font-size:12px;}
+div#bwlRequirementProperties ul.linkText{left: 0%;font-size:12px;}
+div#bwlRequirementProperties input.searchTerms{left: 0%;font-size:12px;}
+div#bwlRequirementProperties select.results{left: 0%;font-size:12px;}
+
+body {
+    background-color: #B9D6EC;
+
+}
