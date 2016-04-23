@@ -742,20 +742,17 @@ public class BugzillaChangeRequestService
 
 	private void addChildrenToList(RequirementInfo req, List<OSLCRequirement> results, String indent, String productId) {
 		List<RequirementInfo> children = req.getChildren();
-		if (children !=null)
+		if (children != null)
 		{
 			for (RequirementInfo child : children) {
 				try {
-					OSLCRequirement childReq = OSLCRequirement.fromRequirement(child);
+					OSLCRequirement childReq = OSLCRequirement.fromRequirement(child, req);
 					childReq.setAbout(getAboutURI(productId + "/requirements/"+ childReq.getIdentifier()));
 					childReq.setDisplayIndent(indent);
 					setInstanceShape(child,childReq);
 					results.add(childReq);
 					// Why this string? Subprocesses?
 					addChildrenToList(child,results,indent + "-",productId);
-				} catch (UnsupportedEncodingException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
 				} catch (URISyntaxException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
