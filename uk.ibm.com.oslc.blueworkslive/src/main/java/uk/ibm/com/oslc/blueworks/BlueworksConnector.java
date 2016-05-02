@@ -26,12 +26,11 @@ public class BlueworksConnector extends IRequirementsConnector {
 		client = new BlueworksRestApiClient();
 	}
 	@Override
-	public Map<String,String> getServiceProviderCatalog(String username,
-			String password) {
+	public Map<String,String> getServiceProviderCatalog() {
 
 		// TODO - maybe change this to list out different accounts for the user ids....
 		Map<String,String> serviceProviders = new HashMap<String,String>();
-		serviceProviders.put("1", "Blueworks Live Processes");
+		serviceProviders.put("bwl", "Blueworks Live");
 		return serviceProviders;
 	}
 	@Override
@@ -44,7 +43,7 @@ public class BlueworksConnector extends IRequirementsConnector {
 	}
 	@Override
 	public String getPublisher() {
-		return "IBM Rational UK - Technical Professionals";
+		return "IBM Rational UK/CZ - Technical Professionals";
 	}
 	@Override
 	public List<RequirementInfo> getRequirementsFromServiceProvider(String providerId) throws UnauthorizedException {
@@ -92,7 +91,7 @@ public class BlueworksConnector extends IRequirementsConnector {
 		//System.out.println("Entering the search specific requirements method");
 		// ok so the service provider catalog for blueworks is spaces ( i think)
 		// we need to get all the spaces this userid is following
-		if (searchTerms !=null)
+		if (searchTerms != null)
 		{
 			searchTerms = searchTerms.trim();
 			System.out.println("The product id is: " + providerId + "\nTerms are: " + searchTerms);

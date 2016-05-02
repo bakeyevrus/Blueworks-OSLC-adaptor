@@ -23,8 +23,7 @@ public abstract class IRequirementsConnector {
 		return instance;
 	}
 	
-	//
-	public abstract Map<String, String> getServiceProviderCatalog(String username, String password);
+	public abstract Map<String, String> getServiceProviderCatalog();
 	
 	public abstract List<RequirementInfo> getRequirementsFromServiceProvider(String providerId) throws UnauthorizedException;
 	

@@ -16,9 +16,8 @@
     Michael Fiedler	 - adapted for OSLC4J
  -->
 <%@ page contentType="text/html" language="java" pageEncoding="UTF-8" %>
-<%@ page import="java.net.*,java.util.*,java.text.SimpleDateFormat" %>
+<%-- <%@ page import="java.net.*,java.util.*,java.text.SimpleDateFormat" %>  --%>
 <%@ page import="uk.ibm.com.oslc.resources.OSLCRequirement" %>
-<%@ page import="uk.ibm.com.oslc.resources.Person" %>
 
 
 <%

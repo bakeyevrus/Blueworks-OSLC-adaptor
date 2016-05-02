@@ -54,7 +54,7 @@ public class ApplicationManager implements ServletContextListener  {
     private static String HOST = "";
 
 	
-    //Bugzilla adapter properties from oslc.properties 
+    // Blueworks adapter properties from oslc.properties 
     static {
         Properties props = new Properties();
         try {
@@ -84,7 +84,7 @@ public class ApplicationManager implements ServletContextListener  {
     public void contextInitialized(final ServletContextEvent servletContextEvent)
     {
     	//Get the servlet base URI and set some paths to the REST services and the catalog
-    	String basePath=generateBasePath(servletContextEvent);
+    	String basePath = generateBasePath(servletContextEvent);
     	servletBase = basePath;
     	servicePath = basePath + SERVICE_PATH;
     	System.setProperty(SYSTEM_PROPERTY_NAME_REGISTRY_URI, basePath + SERVICE_PATH + "/catalog/singleton");
@@ -148,31 +148,4 @@ public class ApplicationManager implements ServletContextListener  {
 	public static String getAdmin() {
 		return admin;
 	}
-
-	
-	//The following are static utility methods are useful for getting, creating and updating Bugzilla bugs.  Primarily used by BugzillaChangeRequestService
-	
-	
-	
-	
-	
-
-	public static Product getProduct(final HttpServletRequest httpServletRequest, final String productIdString)
-	{
-		int productId = Integer.parseInt(productIdString);
-		Product product = null;
-		
-		try {
-			final IRequirementsConnector bc = ApplicationManager.getRequirementsConnector(httpServletRequest);				
-			GetProduct getProducts = new GetProduct(productId); 
-			//bc.executeMethod(getProducts);
-			product = getProducts.getProduct();
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new WebApplicationException(e);
-		}
-		return product;
-	}
-	
-	
 }

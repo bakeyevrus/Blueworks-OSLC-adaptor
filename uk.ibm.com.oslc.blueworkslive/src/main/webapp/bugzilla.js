@@ -28,6 +28,13 @@ function search(baseUrl){
 			for( var i=0; i<resp.results.length; i=i+1 ) {
 				var item=document.createElement('option');
 				item.text = resp.results[i].title;
+				/*
+				// TODO: Find the Java solution
+				// Adding a space in front of activities
+				if (item.text.indexOf("(activity)") > -1) {
+					item.text = " " + resp.results[i].title;
+				}
+				*/ 
 				item.value = resp.results[i].resource;
 				
 				if (ie > 0) {
@@ -86,7 +93,7 @@ function create(baseUrl){
 
 function select(){
 	list = document.getElementById("results");
-	if( list.length>0 && list.selectedIndex >= 0 ) {
+	if( list.length > 0 && list.selectedIndex >= 0 ) {
 		option = list.options[list.selectedIndex];
 		sendResponse(option.text, option.value);
 	}

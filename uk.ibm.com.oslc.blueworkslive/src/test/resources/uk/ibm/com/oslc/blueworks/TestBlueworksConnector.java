@@ -59,7 +59,7 @@ public class TestBlueworksConnector {
 	@Test
 	public void testGetServiceProviderCatalog() {
 		IRequirementsConnector connector = IRequirementsConnector.getInstance();
-		Map<String,String> serviceProviders = connector.getServiceProviderCatalog("", "");
+		Map<String,String> serviceProviders = connector.getServiceProviderCatalog();
 		Assert.assertTrue(serviceProviders.size()>0);
 		Set<String> keys = serviceProviders.keySet();
 		for (String string : keys) {

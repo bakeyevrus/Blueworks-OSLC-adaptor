@@ -52,7 +52,7 @@ import uk.ibm.com.oslc.resources.OSLCRequirement;
 import uk.ibm.com.oslc.resources.Person;
 import uk.ibm.com.oslc.services.BugzillaChangeRequestService;
 
-public class BugzillaApplication extends OslcWinkApplication {
+public class BlueworksLiveApplication extends OslcWinkApplication {
 
     private static final Set<Class<?>>         RESOURCE_CLASSES                          = new HashSet<Class<?>>();
     private static final Map<String, Class<?>> RESOURCE_SHAPE_PATH_TO_RESOURCE_CLASS_MAP = new HashMap<String, Class<?>>();
@@ -93,14 +93,14 @@ public class BugzillaApplication extends OslcWinkApplication {
     	} catch (ClassNotFoundException e)
     	{
     		e.printStackTrace();
-    		System.err.println("BugzillaApplication failed to initialize");
+    		System.err.println("BlueworksLiveApplication failed to initialize");
     	}
 
         RESOURCE_SHAPE_PATH_TO_RESOURCE_CLASS_MAP.put(Constants.PATH_CHANGE_REQUEST, OSLCRequirement.class);
         
     }
 
-    public BugzillaApplication()
+    public BlueworksLiveApplication()
            throws OslcCoreApplicationException,
                   URISyntaxException
     {

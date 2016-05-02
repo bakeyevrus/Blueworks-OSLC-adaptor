@@ -7,6 +7,7 @@ import java.util.List;
 import uk.ibm.com.oslc.rm.RequirementInfo;
 
 public class BlueworksProcess {
+	
 	private String processId = null;
 	private String name = null;
 	private String modifiedUserName = null;

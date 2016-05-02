@@ -32,22 +32,25 @@ import org.eclipse.lyo.oslc4j.core.model.ServiceProvider;
 import org.eclipse.lyo.oslc4j.core.model.ServiceProviderFactory;
 
 import uk.ibm.com.oslc.Constants;
+import uk.ibm.com.oslc.services.BlueworksChangeRequestService;
 import uk.ibm.com.oslc.services.BugzillaChangeRequestService;
 
-public class BugzillaServiceProviderFactory
+public class BlueworksServiceProviderFactory
 {
     private static Class<?>[] RESOURCE_CLASSES =
     {
-        BugzillaChangeRequestService.class
+        BugzillaChangeRequestService.class,
+        // TODO: RB - Return it
+        //  BlueworksChangeRequestService.class
     };
 
-    private BugzillaServiceProviderFactory()
+    private BlueworksServiceProviderFactory()
     {
         super();
     }
 
     /**
-     * Create a new Bugzilla OSLC change management service provider.
+     * Create a new Blueworks OSLC CM/RM service provider.
      * @param baseURI
      * @param product
      * @param parameterValueMap - a map containing the path replacement value for {productId}.  See ServiceProviderCatalogSingleton.initServiceProvidersFromProducts()
@@ -61,7 +64,7 @@ public class BugzillaServiceProviderFactory
         final ServiceProvider serviceProvider = ServiceProviderFactory.createServiceProvider(baseURI,
                                                                                              ServiceProviderRegistryURIs.getUIURI(),
                                                                                              product,
-                                                                                             "Service provider for Bugzilla product: "+product,
+                                                                                             "Service provider for product: " + product,
                                                                                              new Publisher("Eclipse Lyo", "urn:oslc:ServiceProvider"),
                                                                                              RESOURCE_CLASSES,
                                                                                              parameterValueMap);
@@ -76,7 +79,7 @@ public class BugzillaServiceProviderFactory
             new PrefixDefinition(OslcConstants.RDF_NAMESPACE_PREFIX,                 new URI(OslcConstants.RDF_NAMESPACE)),
             new PrefixDefinition(OslcConstants.RDFS_NAMESPACE_PREFIX,                new URI(OslcConstants.RDFS_NAMESPACE)),
             new PrefixDefinition(Constants.CHANGE_MANAGEMENT_NAMESPACE_PREFIX,       new URI(Constants.CHANGE_MANAGEMENT_NAMESPACE)),
-            new PrefixDefinition(Constants.BUGZILLA_NAMESPACE_PREFIX,                new URI(Constants.BUGZILLA_NAMESPACE)),
+//            new PrefixDefinition(Constants.BUGZILLA_NAMESPACE_PREFIX,                new URI(Constants.BUGZILLA_NAMESPACE)),
             new PrefixDefinition(Constants.FOAF_NAMESPACE_PREFIX,                    new URI(Constants.FOAF_NAMESPACE)),
             new PrefixDefinition(Constants.QUALITY_MANAGEMENT_PREFIX,                new URI(Constants.QUALITY_MANAGEMENT_NAMESPACE)),
             new PrefixDefinition(Constants.REQUIREMENTS_MANAGEMENT_PREFIX,           new URI(Constants.REQUIREMENTS_MANAGEMENT_NAMESPACE)),

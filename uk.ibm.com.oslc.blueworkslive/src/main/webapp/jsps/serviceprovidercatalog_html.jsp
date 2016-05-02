@@ -34,7 +34,7 @@ String toolName = (String)request.getAttribute("toolName");
 	
 		<div id="header">
 			<div id="banner"></div>
-			<table border="0" cellspacing="0" cellpadding="0" id="titles">
+			<table border="0" cellspacing="" cellpadding="5" id="titles">
 				<tr>
 					<td id="title">
 						<p>
@@ -43,7 +43,7 @@ String toolName = (String)request.getAttribute("toolName");
 					</td>
 					<td id="information">
 						<p class="header_addl_info">
-							version 0.1
+							version 0.2
 						</p>
 					</td>
 				</tr>

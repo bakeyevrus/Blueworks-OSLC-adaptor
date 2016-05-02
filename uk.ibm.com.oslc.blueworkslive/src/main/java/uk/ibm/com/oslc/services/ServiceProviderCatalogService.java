@@ -38,6 +38,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.http.protocol.HTTP;
 import org.eclipse.lyo.oslc4j.core.annotation.OslcDialog;
 import org.eclipse.lyo.oslc4j.core.annotation.OslcQueryCapability;
 import org.eclipse.lyo.oslc4j.core.annotation.OslcService;
@@ -161,21 +162,25 @@ public class ServiceProviderCatalogService
     	ServiceProviderCatalog catalog = ServiceProviderCatalogSingleton.getServiceProviderCatalog(httpServletRequest);
     	
 
-    	if (catalog !=null )
+    	if (catalog != null )
     	{
     		catalog.setPublisher(new Publisher(IRequirementsConnector.getInstance().getPublisher(),IRequirementsConnector.getInstance().getIdentifier()));
     		httpServletRequest.setAttribute("targetUri", IRequirementsConnector.getInstance().getBaseEndpoint());
-	        httpServletRequest.setAttribute("catalog",catalog);
-	        httpServletRequest.setAttribute("baseUri",ApplicationManager.getServletBase());
-	        httpServletRequest.setAttribute("toolName",IRequirementsConnector.getInstance().getToolName());
+	        httpServletRequest.setAttribute("catalog", catalog);
+	        httpServletRequest.setAttribute("baseUri", ApplicationManager.getServletBase());
+	        httpServletRequest.setAttribute("toolName", IRequirementsConnector.getInstance().getToolName());
 
-	        RequestDispatcher rd = httpServletRequest.getRequestDispatcher("/rm/serviceprovidercatalog_html.jsp");
+	        RequestDispatcher rd = httpServletRequest.getRequestDispatcher("/jsps/serviceprovidercatalog_html.jsp");
     		try {
 				rd.forward(httpServletRequest, httpServletResponse);
 			} catch (Exception e) {				
 				e.printStackTrace();
 				throw new WebApplicationException(e);
 			} 
+    	} else {
+    		System.err.println("The catalog for serviceProviderId " + serviceProviderId + " is null");
+    		WebApplicationException e = new WebApplicationException(HttpServletResponse.SC_NOT_FOUND);
+    		throw e;
     	}
     }
 }

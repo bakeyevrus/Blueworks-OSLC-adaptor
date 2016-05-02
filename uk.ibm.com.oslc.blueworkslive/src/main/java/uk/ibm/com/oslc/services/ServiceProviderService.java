@@ -148,23 +148,27 @@ public class ServiceProviderService
     	
     	Service [] services = serviceProvider.getServices();
     	
-    	if (services !=null && services.length > 0)
+    	if (services != null && services.length > 0)
     	{
     		serviceProvider.setPublisher(new Publisher(IRequirementsConnector.getInstance().getPublisher(),IRequirementsConnector.getInstance().getPublisher()));
 	        serviceProvider.setIdentifier(IRequirementsConnector.getInstance().getIdentifier());
 	        httpServletRequest.setAttribute("service", services[0]);
 	        httpServletRequest.setAttribute("serviceProvider", serviceProvider);
-	        httpServletRequest.setAttribute("baseUri",ApplicationManager.getServletBase());
+	        httpServletRequest.setAttribute("baseUri", ApplicationManager.getServletBase());
 	        httpServletRequest.setAttribute("targetUri",IRequirementsConnector.getInstance().getBaseEndpoint());
 	        httpServletRequest.setAttribute("targetToolName",IRequirementsConnector.getInstance().getToolName());
 
-	        RequestDispatcher rd = httpServletRequest.getRequestDispatcher("/rm/serviceprovider_html.jsp");
+	        RequestDispatcher rd = httpServletRequest.getRequestDispatcher("/jsps/serviceprovider_html.jsp");
     		try {
 				rd.forward(httpServletRequest, httpServletResponse);
 			} catch (Exception e) {				
 				e.printStackTrace();
 				throw new WebApplicationException(e);
 			} 
+    	} else {
+    		System.err.println("The services for serviceProviderId " + serviceProviderId + " are null");
+    		WebApplicationException e = new WebApplicationException(HttpServletResponse.SC_NOT_FOUND);
+    		throw e;
     	}
     }
 
