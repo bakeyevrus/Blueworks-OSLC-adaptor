@@ -63,17 +63,20 @@ import org.eclipse.lyo.oslc4j.core.model.Preview;
 
 import uk.ibm.com.oslc.ApplicationManager;
 import uk.ibm.com.oslc.Constants;
+import uk.ibm.com.oslc.blueworks.BlueworksProcess;
+import uk.ibm.com.oslc.blueworks.BlueworksProcessActivity;
 import uk.ibm.com.oslc.resources.ChangeRequest;
 import uk.ibm.com.oslc.resources.OSLCRequirement;
+import uk.ibm.com.oslc.resources.Requirement;
 import uk.ibm.com.oslc.rm.IRequirementsConnector;
 import uk.ibm.com.oslc.rm.RequirementInfo;
 import uk.ibm.com.oslc.servlet.ServiceProviderCatalogSingleton;
 
 import com.j2bugzilla.rpc.BugSearch;
 
-@OslcService(Constants.CHANGE_MANAGEMENT_DOMAIN)
+@OslcService(Constants.REQUIREMENTS_MANAGEMENT_NAMESPACE)
 @Path("{productId}/requirements")
-public class BugzillaChangeRequestService
+public class BlueworksRequirementService
 
 {
 
@@ -84,15 +87,16 @@ public class BugzillaChangeRequestService
 	@Context
 	private UriInfo uriInfo;
 
-	public BugzillaChangeRequestService() {
+	public BlueworksRequirementService() {
 		super();
 	}
 
 	@OslcDialogs({ @OslcDialog(title = "Blueworks Live Process Selection Dialog", label = "Blueworks Live Process Selection Dialog", uri = "/{productId}/requirements/selector", hintWidth = "510px", hintHeight = "500px", resourceTypes = { Constants.TYPE_REQUIREMENT }, usages = { OslcConstants.OSLC_USAGE_DEFAULT })
 
 	})
-	@OslcQueryCapability(title = "Change Request Query Capability", label = "Change Request Catalog Query", resourceShape = OslcConstants.PATH_RESOURCE_SHAPES
-			+ "/" + Constants.PATH_CHANGE_REQUEST, resourceTypes = { Constants.TYPE_REQUIREMENT }, usages = { OslcConstants.OSLC_USAGE_DEFAULT })
+	// TODO: RB - now working
+	@OslcQueryCapability(title = "Requirement Query Capability", label = "Requirement Catalog Query", resourceShape = OslcConstants.PATH_RESOURCE_SHAPES
+			+ "/" + Constants.PATH_REQUIREMENT, resourceTypes = { Constants.TYPE_REQUIREMENT }, usages = { OslcConstants.OSLC_USAGE_DEFAULT })
 	/**
 	 * RDF/XML, XML and JSON representation of a change request collection
 	 * 
@@ -169,6 +173,7 @@ public class BugzillaChangeRequestService
 		}
 	}
 
+	// TODO: RB - what is it? Rewrite
 	/**
 	 * HTML representation of change request collection
 	 * 
@@ -198,7 +203,7 @@ public class BugzillaChangeRequestService
 		if (results != null) {
 
 			RequestDispatcher rd = httpServletRequest
-					.getRequestDispatcher("/rm/changerequest_collection_html.jsp");
+					.getRequestDispatcher("/jsps/requirement_collection_html.jsp");
 			rd.forward(httpServletRequest, httpServletResponse);
 		}
 
@@ -206,7 +211,7 @@ public class BugzillaChangeRequestService
 	}
 
 	/**
-	 * RDF/XML, XML and JSON representation of a single change request
+	 * RDF/XML, XML and JSON representation of a single requirement
 	 * 
 	 * @param productId
 	 * @param changeRequestId
@@ -218,12 +223,12 @@ public class BugzillaChangeRequestService
 	 * @throws URISyntaxException
 	 */
 	@GET
-	@Path("{changeRequestId}")
+	@Path("{requirementId}")
 	@Produces({ OslcMediaType.APPLICATION_RDF_XML,
 			OslcMediaType.APPLICATION_XML, OslcMediaType.APPLICATION_JSON })
-	public Response getChangeRequest(
+	public Response getRequirement(
 			@PathParam("productId") final String productId,
-			@PathParam("changeRequestId") final String changeRequestId,
+			@PathParam("requirementId") final String requirementId,
 			@QueryParam("oslc.properties") final String propertiesString,
 			@QueryParam("oslc.prefix") final String prefix) throws IOException,
 			ServletException, URISyntaxException {
@@ -250,20 +255,21 @@ public class BugzillaChangeRequestService
 			}
 		}
 
-		final RequirementInfo req = IRequirementsConnector.getInstance()
-				.getRequirementById(changeRequestId);
+		final BlueworksProcess bwlItem = IRequirementsConnector.getInstance()
+				.getBlueworksProcessByItemId(requirementId);
 
-		if (req != null) {
-			OSLCRequirement changeRequest = null;
+		if (bwlItem != null) {
 
-			changeRequest = OSLCRequirement.fromRequirement(req);
+			OSLCRequirement requirement = null;
+			requirement = OSLCRequirement.fromBlueworksItem(bwlItem,
+					requirementId);
 
-			changeRequest.setServiceProvider(ServiceProviderCatalogSingleton
+			requirement.setServiceProvider(ServiceProviderCatalogSingleton
 					.getServiceProvider(httpServletRequest, productId)
 					.getAbout());
-			changeRequest.setAbout(getAboutURI(productId + "/requirements/"
-					+ changeRequest.getIdentifier()));
-			setETagHeader(getETagFromChangeRequest(changeRequest),
+			requirement.setAbout(getAboutURI(productId + "/requirements/"
+					+ requirement.getIdentifier()));
+			setETagHeader(getETagFromRequirement(requirement),
 					httpServletResponse);
 
 			httpServletRequest.setAttribute(
@@ -271,7 +277,7 @@ public class BugzillaChangeRequestService
 					QueryUtils.invertSelectedProperties(properties));
 
 			return Response
-					.ok(changeRequest)
+					.ok(requirement)
 					.header(Constants.HDR_OSLC_VERSION,
 							Constants.OSLC_VERSION_V2).build();
 		}
@@ -293,23 +299,23 @@ public class BugzillaChangeRequestService
 	 * @throws ServletException
 	 */
 	@GET
-	@Path("{changeRequestId}")
+	@Path("{requirementId}")
 	@Produces({ OslcMediaType.APPLICATION_X_OSLC_COMPACT_XML })
 	public Compact getCompact(@PathParam("productId") final String productId,
-			@PathParam("changeRequestId") final String changeRequestId)
+			@PathParam("requirementId") final String requirementId)
 			throws URISyntaxException, IOException, ServletException {
-		OSLCRequirement changeRequest = getRequirementFromId(changeRequestId);
+		OSLCRequirement requirement = getRequirementFromId(requirementId);
 
-		if (changeRequest != null) {
+		if (requirement != null) {
 			final Compact compact = new Compact();
 
 			compact.setAbout(getAboutURI(productId + "/requirements/"
-					+ changeRequest.getIdentifier()));
-			compact.setTitle(changeRequest.getTitle());
+					+ requirement.getIdentifier()));
+			compact.setTitle(requirement.getTitle());
 
 			String iconUri = null;
-			if (changeRequest.getRequirementType() != null
-					&& "ACTIVITY".equals(changeRequest.getRequirementType())) {
+			if (requirement.getRequirementType() != null
+					&& "ACTIVITY".equals(requirement.getRequirementType())) {
 				iconUri = ApplicationManager.getServletBase()
 						+ "/images/resources/BlueworksActivity16.gif";
 			} else {
@@ -329,7 +335,7 @@ public class BugzillaChangeRequestService
 			// Use the HTML representation of a change request as the large
 			// preview as well
 			// Why this?
-			//TODO: Remove and check for bugs
+			// TODO: Remove and check for bugs
 			final Preview largePreview = new Preview();
 			largePreview.setHintHeight("18em");
 			largePreview.setHintWidth("41em");
@@ -343,45 +349,41 @@ public class BugzillaChangeRequestService
 	}
 
 	private OSLCRequirement getRequirementFromId(final String requirementId) {
-		final RequirementInfo info = IRequirementsConnector.getInstance()
-				.getRequirementById(requirementId);
-		OSLCRequirement changeRequest = null;
-		if (info != null) {
-			try {
-				changeRequest = OSLCRequirement.fromRequirement(info);
+		final BlueworksProcess process = IRequirementsConnector.getInstance()
+				.getBlueworksProcessByItemId(requirementId);
+		OSLCRequirement req = null;
 
+		if (process != null) {
+			try {
+				req = OSLCRequirement.fromBlueworksItem(process, requirementId);
 			} catch (URISyntaxException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (UnsupportedEncodingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				System.err.println("Error: " + e.getMessage());
 			}
 		}
-		return changeRequest;
+		return req;
 	}
 
 	/**
 	 * HTML representation for a single change request - redirect the request
-	 * directly to Bugzilla
+	 * directly to Blueworks Live
 	 * 
 	 * @param productId
-	 * @param changeRequestId
+	 * @param requirementId
 	 * @throws ServletException
 	 * @throws IOException
 	 * @throws URISyntaxException
 	 */
 	@GET
-	@Path("{changeRequestId}")
+	@Path("{requirementId}")
 	@Produces({ MediaType.TEXT_HTML })
-	public Response getHtmlChangeRequest(
+	public Response getHtmlRequirement(
 			@PathParam("productId") final String productId,
-			@PathParam("changeRequestId") final String changeRequestId)
+			@PathParam("requirementId") final String requirementId)
 			throws ServletException, IOException, URISyntaxException {
-		RequirementInfo info = IRequirementsConnector.getInstance()
-				.getRequirementById(changeRequestId);
+		BlueworksProcess process = IRequirementsConnector.getInstance()
+				.getBlueworksProcessByItemId(requirementId);
 		String forwardUri = IRequirementsConnector.getInstance()
-				.getEndpointStringForRequirement(info);
+				.getEndpointStringFromBlueworksItem(process, requirementId);
 		httpServletResponse.sendRedirect(forwardUri);
 		return Response.seeOther(new URI(forwardUri)).build();
 	}
@@ -404,7 +406,7 @@ public class BugzillaChangeRequestService
 	@GET
 	@Path("selector")
 	@Consumes({ MediaType.TEXT_HTML, MediaType.WILDCARD })
-	public void changeRequestSelector(@QueryParam("terms") final String terms,
+	public void requirementSelector(@QueryParam("terms") final String terms,
 			@PathParam("productId") final String productId)
 			throws ServletException, IOException {
 		// int productIdNum = Integer.parseInt(productId);
@@ -417,12 +419,12 @@ public class BugzillaChangeRequestService
 		if (terms != null) {
 			String trimmedTerms = terms.trim();
 			httpServletRequest.setAttribute("terms", trimmedTerms);
-			sendFilteredBugsReponse(httpServletRequest, productId, trimmedTerms);
-
+			sendFilteredProcessesReponse(httpServletRequest, productId,
+					trimmedTerms);
 		} else {
 			try {
 				RequestDispatcher rd = httpServletRequest
-						.getRequestDispatcher("/rm/changerequest_selector.jsp");
+						.getRequestDispatcher("/jsps/requirement_selector.jsp");
 				rd.forward(httpServletRequest, httpServletResponse);
 
 			} catch (Exception e) {
@@ -444,29 +446,30 @@ public class BugzillaChangeRequestService
 	 * @throws URISyntaxException
 	 */
 	@GET
-	@Path("{changeRequestId}/smallPreview")
+	@Path("{requirementId}/smallPreview")
 	@Produces({ MediaType.TEXT_HTML })
 	public void smallPreview(@PathParam("productId") final String productId,
-			@PathParam("changeRequestId") final String changeRequestId)
+			@PathParam("requirementId") final String requirementId)
 			throws ServletException, IOException, URISyntaxException {
 
-		OSLCRequirement changeRequest = getRequirementFromId(changeRequestId);
-		if (changeRequest != null) {
+		OSLCRequirement requirement = getRequirementFromId(requirementId);
 
-			changeRequest.setServiceProvider(ServiceProviderCatalogSingleton
+		if (requirement != null) {
+
+			requirement.setServiceProvider(ServiceProviderCatalogSingleton
 					.getServiceProvider(httpServletRequest, productId)
 					.getAbout());
-			changeRequest.setAbout(getAboutURI(productId + "/requirements/"
-					+ changeRequest.getIdentifier()));
+			requirement.setAbout(getAboutURI(productId + "/requirements/"
+					+ requirement.getIdentifier()));
 
 			final String baseUri = ApplicationManager.getServletBase();
-			httpServletRequest.setAttribute("changeRequest", changeRequest);
+			httpServletRequest.setAttribute("requirement", requirement);
 			httpServletRequest.setAttribute("baseUri", baseUri);
 			httpServletRequest.setAttribute("processType",
-					changeRequest.getRequirementType());
+					requirement.getRequirementType());
 
 			RequestDispatcher rd = httpServletRequest
-					.getRequestDispatcher("/rm/changerequest_preview_small.jsp");
+					.getRequestDispatcher("/jsps/requirement_preview_small.jsp");
 			rd.forward(httpServletRequest, httpServletResponse);
 			return;
 		}
@@ -478,7 +481,7 @@ public class BugzillaChangeRequestService
 	/**
 	 * OSLC large preview for a single change request
 	 * 
-	 * Forwards to changerequest_preview_large.jsp to build the html
+	 * Forwards to requirement_preview_large.jsp to build the html
 	 * 
 	 * @param productId
 	 * @param changeRequestId
@@ -489,26 +492,26 @@ public class BugzillaChangeRequestService
 	@GET
 	@Path("{changeRequestId}/largePreview")
 	@Produces({ MediaType.TEXT_HTML })
-	public void getLargePreview(@PathParam("productId") final String productId,
-			@PathParam("changeRequestId") final String changeRequestId)
+	public void largePreview(@PathParam("productId") final String productId,
+			@PathParam("requirementId") final String requirementId)
 			throws ServletException, IOException, URISyntaxException {
-		OSLCRequirement changeRequest = getRequirementFromId(changeRequestId);
-		if (changeRequest != null) {
+		OSLCRequirement requirement = getRequirementFromId(requirementId);
+		if (requirement != null) {
 
-			changeRequest.setServiceProvider(ServiceProviderCatalogSingleton
+			requirement.setServiceProvider(ServiceProviderCatalogSingleton
 					.getServiceProvider(httpServletRequest, productId)
 					.getAbout());
-			changeRequest.setAbout(getAboutURI(productId + "/requirements/"
-					+ changeRequest.getIdentifier()));
+			requirement.setAbout(getAboutURI(productId + "/requirements/"
+					+ requirement.getIdentifier()));
 
 			final String baseUri = ApplicationManager.getServletBase();
-			httpServletRequest.setAttribute("changeRequest", changeRequest);
+			httpServletRequest.setAttribute("requirement", requirement);
 			httpServletRequest.setAttribute("baseUri", baseUri);
 			httpServletRequest.setAttribute("processType",
-					changeRequest.getRequirementType());
+					requirement.getRequirementType());
 
 			RequestDispatcher rd = httpServletRequest
-					.getRequestDispatcher("/rm/changerequest_preview_small.jsp");
+					.getRequestDispatcher("/jsps/requirement_preview_large.jsp");
 			rd.forward(httpServletRequest, httpServletResponse);
 		}
 
@@ -632,19 +635,18 @@ public class BugzillaChangeRequestService
 				"updating blueworks requirements is unsupported in this version.");
 	}
 
-	private static void setETagHeader(final String eTagFromChangeRequest,
+	private static void setETagHeader(final String eTagFromRequirement,
 			final HttpServletResponse httpServletResponse) {
-		httpServletResponse.setHeader("ETag", eTagFromChangeRequest);
+		httpServletResponse.setHeader("ETag", eTagFromRequirement);
 	}
 
-	private static String getETagFromChangeRequest(
-			final ChangeRequest changeRequest) {
+	private static String getETagFromRequirement(final Requirement req) {
 		Long eTag = null;
 
-		if (changeRequest.getModified() != null) {
-			eTag = changeRequest.getModified().getTime();
-		} else if (changeRequest.getCreated() != null) {
-			eTag = changeRequest.getCreated().getTime();
+		if (req.getModified() != null) {
+			eTag = req.getModified().getTime();
+		} else if (req.getCreated() != null) {
+			eTag = req.getCreated().getTime();
 		} else {
 			eTag = new Long(0);
 		}
@@ -664,9 +666,9 @@ public class BugzillaChangeRequestService
 	}
 
 	/**
-	 * Create and run a Bugzilla search and return the result.
+	 * Create and run a Blueworks Live search and return the result.
 	 * 
-	 * Forwards to changerequest_filtered_json.jsp to create the JSON response
+	 * Forwards to requirement_filtered_json.jsp to create the JSON response
 	 * 
 	 * @param httpServletRequest
 	 * @param productId
@@ -675,94 +677,60 @@ public class BugzillaChangeRequestService
 	 * @throws IOException
 	 */
 	// The terms parameter is search query
-	private void sendFilteredBugsReponse(
+	private void sendFilteredProcessesReponse(
 			final HttpServletRequest httpServletRequest,
 			final String productId, final String terms)
 			throws ServletException, IOException {
 		try {
-			final IRequirementsConnector bc = ApplicationManager
-					.getRequirementsConnector(httpServletRequest);
+			// TODO: RB - Do we need this?
+			//final IRequirementsConnector bc = ApplicationManager
+			//		.getRequirementsConnector(httpServletRequest);
 
 			List<OSLCRequirement> results = new ArrayList<OSLCRequirement>();
-			if (terms.isEmpty()) {
-				List<RequirementInfo> requirements = IRequirementsConnector
-						.getInstance().getRequirementsFromServiceProvider(
-								productId);
 
-				for (RequirementInfo requirementInfo : requirements) {
-					OSLCRequirement changeRequest = OSLCRequirement
-							.fromRequirement(requirementInfo);
-					changeRequest
-							.setAbout(getAboutURI(productId + "/requirements/"
-									+ changeRequest.getIdentifier()));
-					setInstanceShape(requirementInfo, changeRequest);
-					results.add(changeRequest);
-					addChildrenToList(requirementInfo, results, " -", productId);
-				}
-			}
-			// a search string must have been provided, so let's search for
-			// it...
-			else {
-				List<RequirementInfo> requirements = IRequirementsConnector
-						.getInstance().getRequirementsFromServiceProvider(
-								productId, terms);
+			List<BlueworksProcess> processes = IRequirementsConnector
+					.getInstance().getBlueworksProcessesBySearchTerms(
+							productId, terms);
 
-				for (RequirementInfo requirementInfo : requirements) {
-					OSLCRequirement changeRequest = OSLCRequirement
-							.fromRequirement(requirementInfo);
-					changeRequest
-							.setAbout(getAboutURI(productId + "/requirements/"
-									+ changeRequest.getIdentifier()));
-					setInstanceShape(requirementInfo, changeRequest);
-					results.add(changeRequest);
-					addChildrenToList(requirementInfo, results, " -", productId);
-				}
-
-			}
-
-			// just set the service provider for each and every change request -
-			// easier to do it here
-			for (OSLCRequirement cr : results) {
-				cr.setServiceProvider(ServiceProviderCatalogSingleton
+			for (BlueworksProcess process : processes) {
+				OSLCRequirement requirement = OSLCRequirement
+						.fromBlueworksItem(process, process.getProcessId());
+				requirement.setAbout(getAboutURI(productId + "/requirements/"
+						+ requirement.getIdentifier()));
+				requirement.setServiceProvider(ServiceProviderCatalogSingleton
 						.getServiceProvider(httpServletRequest, productId)
 						.getAbout());
+				setInstanceShape(requirement);
+				addChildrenToList(process, results, productId);
+				results.add(requirement);
 			}
 			httpServletRequest.setAttribute("results", results);
 
-			// BugSearch bugSearch = createBugSearch(terms);
-			// bc.executeMethod(bugSearch);
-			// List<Bug> bugList = bugSearch.getSearchResults();
-			// List<OSLCRequirement> results =
-			// changeRequestsFromBugList(httpServletRequest, bugList,
-			// productId);
-
 			RequestDispatcher rd = httpServletRequest
-					.getRequestDispatcher("/rm/changerequest_filtered_json.jsp");
+					.getRequestDispatcher("/jsps/requirement_filtered_json.jsp");
 			rd.forward(httpServletRequest, httpServletResponse);
-
 		} catch (Exception e) {
 			throw new WebApplicationException(e);
 		}
 	}
 
-	private void addChildrenToList(RequirementInfo req,
-			List<OSLCRequirement> results, String indent, String productId) {
-		List<RequirementInfo> children = req.getChildren();
+	private void addChildrenToList(BlueworksProcess parentProcess,
+			List<OSLCRequirement> results, String productId) {
+
+		List<BlueworksProcessActivity> children = parentProcess
+				.getProcessActivities();
 		if (children != null) {
-			for (RequirementInfo child : children) {
+			for (BlueworksProcessActivity child : children) {
 				try {
-					OSLCRequirement childReq = OSLCRequirement.fromRequirement(
-							child, req);
+					OSLCRequirement childReq = OSLCRequirement
+							.fromBlueworksItem(parentProcess,
+									child.getActivityId());
 					childReq.setAbout(getAboutURI(productId + "/requirements/"
 							+ childReq.getIdentifier()));
-					childReq.setDisplayIndent(indent);
-					setInstanceShape(child, childReq);
+					childReq.setDisplayIndent(" -");
+					setInstanceShape(childReq);
 					results.add(childReq);
-					// TODO: Ensure, that is no need in this line, cause
-					// Blueworks doesn't differ between subprocesses
-					// addChildrenToList(child,results,indent + "-",productId);
 				} catch (URISyntaxException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -770,19 +738,17 @@ public class BugzillaChangeRequestService
 
 	}
 
-	private void setInstanceShape(RequirementInfo requirementInfo,
-			OSLCRequirement changeRequest) {
-		String requirementType = requirementInfo.getType();
-		String subType = requirementInfo.getSubType();
+	private void setInstanceShape(OSLCRequirement requirement) {
+		String requirementType = requirement.getRequirementType();
 		URI shapeURI = null;
 		String baseURI = ApplicationManager.getServletBase();
 
 		try {
-			if (requirementType != null && "process".equals(requirementType)) {
+			if (requirementType != null && "PROCESS".equals(requirementType)) {
 				shapeURI = new URI(baseURI
 						+ "/images/resources/BlueworksProcess16.gif");
 			} else if (requirementType != null
-					&& "activity".equals(requirementType)) {
+					&& "ACTIVITY".equals(requirementType)) {
 				shapeURI = new URI(baseURI
 						+ "/images/resources/BlueworksActivity16.gif");
 			} else {
@@ -790,28 +756,11 @@ public class BugzillaChangeRequestService
 						+ "/images/resources/BlueworksProcess16.gif");
 			}
 		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
 		if (shapeURI != null) {
-			changeRequest.setInstanceShape(shapeURI);
+			requirement.setInstanceShape(shapeURI);
 		}
 	}
-
-	protected BugSearch createBugSearch(final String summary) {
-		BugSearch.SearchQuery summaryQuery = new BugSearch.SearchQuery(
-				BugSearch.SearchLimiter.SUMMARY, summary);
-		BugSearch.SearchQuery limitQuery = new BugSearch.SearchQuery(
-				BugSearch.SearchLimiter.LIMIT, "50");
-
-		BugSearch bugSearch = new BugSearch(summaryQuery, limitQuery);
-
-		return bugSearch;
-	}
-
-	public static String getChangeRequestLinkLabel(int bugId, String summary) {
-		return "Bug " + bugId + ": " + summary;
-	}
-
 }

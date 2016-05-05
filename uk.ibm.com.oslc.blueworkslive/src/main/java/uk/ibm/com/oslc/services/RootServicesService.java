@@ -46,7 +46,7 @@ public class RootServicesService extends HttpServlet {
         request.setAttribute("baseUri", ApplicationManager.getServicePath());
         request.setAttribute("catalogUri", ServiceProviderCatalogSingleton.getUri().toString());
         request.setAttribute("oauthDomain", ApplicationManager.getServletBase());
-		final RequestDispatcher rd = request.getRequestDispatcher("/rm/rootservices_rdfxml.jsp"); 
+		final RequestDispatcher rd = request.getRequestDispatcher("/jsps/rootservices_rdfxml.jsp"); 
 		rd.forward(request, response);
 		response.flushBuffer();
 	}

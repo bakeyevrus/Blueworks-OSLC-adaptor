@@ -30,6 +30,7 @@ import org.apache.wink.json4j.JSONException;
 import org.apache.wink.json4j.JSONObject;
 
 import uk.ibm.com.oslc.exception.UnauthorizedException;
+import uk.ibm.com.oslc.exception.RestException;
 
 /**
  * This Java template provides the developer an example of how you might call
@@ -109,7 +110,7 @@ public class BlueworksRestApiClient {
 	 * require different input parameters and return different formats of
 	 * results.
 	 */
-	private final static String REST_API_VERSION = "20110917";
+	private final static String REST_API_VERSION = "20150930";
 
 	/*
 	 * Date format string to use for BlueworksLive
@@ -157,6 +158,7 @@ public class BlueworksRestApiClient {
 				+ encoded);
 	}
 
+	// TODO: RB - Check it
 	/**
 	 * Validate the user to make sure that, one, they can be authenticated and
 	 * two, that they have a valid status. See the Auth api documentation for
@@ -224,8 +226,42 @@ public class BlueworksRestApiClient {
 		}
 	}
 
-	// TODO: not the best solution, what if I'll have 1000 processses? Try to
-	// solve it
+	private JSONObject makeApiCall(String reqURL) throws UnauthorizedException,
+			RestException {
+		JSONObject apiCallResult = null;
+		try {
+			// Validate user and determine which account to use
+			String accountId = validateUser(this.api_username,
+					this.api_password);
+			if (accountId == null) {
+				throw new UnauthorizedException(
+						"The entered credentials are wrong");
+			}
+			String finalURL = new String(reqURL + "&accountId=" + accountId);
+			HttpURLConnection restApiURLConnection = getRestApiConnection(
+					finalURL, this.api_username, this.api_password);
+			if (restApiURLConnection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+				System.err.println("Request URL is: " + finalURL);
+				System.err
+						.println("Error calling the Blueworks Live REST API.");
+				throw new RestException(restApiURLConnection.getResponseCode(),
+						restApiURLConnection.getResponseMessage());
+			}
+			InputStream restApiStream = restApiURLConnection.getInputStream();
+			try {
+				apiCallResult = new JSONObject(restApiStream);
+			} finally {
+				restApiStream.close();
+			}
+		} catch (JSONException e) {
+			System.err.println("Error: " + e.getMessage());
+		} catch (IOException e) {
+			System.err.println("Error: " + e.getMessage());
+		}
+		return apiCallResult;
+	}
+
+	@Deprecated
 	public List<BlueworksProcess> getProcesses() throws UnauthorizedException {
 		List<BlueworksProcess> blueworksProcesses = new ArrayList<BlueworksProcess>();
 		try {
@@ -309,194 +345,324 @@ public class BlueworksRestApiClient {
 	public List<BlueworksProcess> searchProcesses(String searchTerms)
 			throws UnauthorizedException {
 
-		// TODO: Can it be actually null after many checks before?
-		if (searchTerms == null) {
-			searchTerms = "";
-		}
 		searchTerms = searchTerms.trim();
 		// BlueWorks doesn't use * as the wildcard character, it uses % instead
 		// so replace all * with %
 		searchTerms = searchTerms.replaceAll("\\*", "\\%");
+
 		List<BlueworksProcess> blueworksProcesses = new ArrayList<BlueworksProcess>();
 		try {
-			// Validate user and determine which account to use
-			String accountId = validateUser(
-					BlueworksRestApiClient.api_username,
-					BlueworksRestApiClient.api_password);
-			if (accountId == null) {
-				System.exit(1);
-			}
 
-			// Call the REST APIs. In this example we are calling the api to
-			// return the list of users.
-			// 1015 ms for this operation
-			StringBuilder appListUrlBuilder = new StringBuilder(
-					REST_API_CALL_SEARCH);
-			appListUrlBuilder.append("?version=").append("20120130");
-			// Pass the account id we are using for this user
-			appListUrlBuilder.append("&accountId=").append(accountId);
-			appListUrlBuilder.append("&returnFields=*");
-			appListUrlBuilder.append("&searchFieldName=process_name");
-			appListUrlBuilder.append("&searchValue=").append(
+			StringBuilder reqURL = new StringBuilder(REST_API_CALL_SEARCH);
+			reqURL.append("?version=").append(REST_API_VERSION);
+			reqURL.append("&searchFieldName=process_name");
+			reqURL.append("&searchValue=").append(
 					URLEncoder.encode(searchTerms, "UTF-8"));
-			HttpURLConnection restApiURLConnection = getRestApiConnection(
-					appListUrlBuilder.toString(),
-					BlueworksRestApiClient.api_username,
-					BlueworksRestApiClient.api_password);
+			reqURL.append("&returnFields=output");
+			reqURL.append("&includeArchived=false");
 
-			// System.out.println("Search Requirements REST API Call: " +
-			// appListUrlBuilder.toString());
-			if (restApiURLConnection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-				System.err
-						.println("Error calling the Blueworks Live REST API.");
-				System.exit(1);
-			}
+			JSONObject reqResult = makeApiCall(reqURL.toString());
+			
+			JSONArray spaces = (JSONArray) reqResult.get("spaces");
+			for (Object jsonObject : spaces) {
+				JSONObject jsonSpace = (JSONObject) jsonObject;
+				JSONArray processesInSpace = (JSONArray) jsonSpace
+						.get("processes");
+				for (Object jsonInnerObject : processesInSpace) {
+					JSONObject jsonProcess = (JSONObject) jsonInnerObject;
+					BlueworksProcess blueworksProcess = new BlueworksProcess(
+							jsonProcess.getString("id"),
+							jsonProcess.getString("name"),
+							// we don't get the modified user name back so
+							// set to null
+							"",
+							// we don't get the modified date back from
+							// search either so set to null
+							null);
 
-			// Process the JSON result. In this example we print the name of
-			// each user
-			InputStream restApiStream = restApiURLConnection.getInputStream();
+					// Extract the activities more performantly as they're
+					// returned anyway
+					// The activities are listed against each milestone so
+					// get the milestones first
+					if (jsonProcess.containsKey("milestones")) {
 
-			try {
-				JSONObject appListResult = new JSONObject(restApiStream);
-				// System.out.println("Here is the search appListResult: " +
-				// appListResult.toString());
-				// TODO: Need to allow multiple spaces here by iterating through
-				// each space rather than assuming only one
-				JSONArray spaces = (JSONArray) appListResult.get("spaces");
-				for (Object jsonObject : spaces) {
-					JSONObject jsonSpace = (JSONObject) jsonObject;
-					JSONArray processesInSpace = (JSONArray) jsonSpace
-							.get("processes");
-					for (Object jsonInnerObject : processesInSpace) {
-						JSONObject jsonProcess = (JSONObject) jsonInnerObject;
-						BlueworksProcess blueworksProcess = new BlueworksProcess(
-								jsonProcess.getString("id"),
-								jsonProcess.getString("name"),
-								// we don't get the modified user name back so
-								// set to null
-								"",
-								// we don't get the modified date back from
-								// search either so set to null
-								null);
+						JSONArray milestonesInProcess = (JSONArray) jsonProcess
+								.get("milestones");
+						List<BlueworksProcessActivity> processActivities = new ArrayList<BlueworksProcessActivity>();
+						for (Object jsonMilestoneObject : milestonesInProcess) {
+							JSONObject jsonMilestone = (JSONObject) jsonMilestoneObject;
 
-						// Extract the activities more performantly as they're
-						// returned anyway
-						// The activities are listed against each milestone so
-						// get the milestones first
-						if (jsonProcess.containsKey("milestones")) {
+							// Now look inside each milestone for the
+							// activities
+							if (jsonMilestone.containsKey("activities")) {
 
-							JSONArray milestonesInProcess = (JSONArray) jsonProcess
-									.get("milestones");
-							List<BlueworksProcessActivity> processActivities = new ArrayList<BlueworksProcessActivity>();
-							for (Object jsonMilestoneObject : milestonesInProcess) {
-								JSONObject jsonMilestone = (JSONObject) jsonMilestoneObject;
+								JSONArray activitiesInMilestone = (JSONArray) jsonMilestone
+										.get("activities");
 
-								// Now look inside each milestone for the
-								// activities
-								if (jsonMilestone.containsKey("activities")) {
-
-									JSONArray activitiesInMilestone = (JSONArray) jsonMilestone
-											.get("activities");
-
-									for (Object jsonActivityObject : activitiesInMilestone) {
-										JSONObject jsonActivity = (JSONObject) jsonActivityObject;
-										processActivities
-												.add(new BlueworksProcessActivity(
-														blueworksProcess
-																.getProcessId(),
-														jsonActivity
-																.getString("id"),
-														jsonActivity
-																.getString("name"),
-														"activity", "activity"));
-									}
+								for (Object jsonActivityObject : activitiesInMilestone) {
+									JSONObject jsonActivity = (JSONObject) jsonActivityObject;
+									processActivities
+											.add(new BlueworksProcessActivity(
+													blueworksProcess
+															.getProcessId(),
+													jsonActivity
+															.getString("id"),
+													jsonActivity
+															.getString("name"),
+													"ACTIVITY", "activity"));
 								}
-
-								// Add the activities list to the
-								// blueworksProcess we set up
-								blueworksProcess
-										.setProcessActivities(processActivities);
 							}
+
+							// Add the activities list to the
+							// blueworksProcess we set up
+							blueworksProcess
+									.setProcessActivities(processActivities);
 						}
-						blueworksProcesses.add(blueworksProcess);
-
 					}
-					// System.out.println("Search result: " +
-					// blueworksProcesses.toString());
-
-					// BlueworksProcess blueworksProcess = new BlueworksProcess(
-					// jsonSpace.getString("id"),
-					// jsonSpace.getString("name"),
-					// //we don't get the modified user name back so set to null
-					// "",
-					// //we don't get the modified date back from search either
-					// so set to null
-					// "");
-					// blueworksProcesses.add(blueworksProcess);
-					// System.out.println("Search result: " +
-					// blueworksProcess.toString());
-				}
-
-			} finally {
-				// Cleanup an streams we have opened
-				restApiStream.close();
-			}
-
+					blueworksProcesses.add(blueworksProcess);
+				} // processes loop
+			} // spaces loop
 		} catch (IOException ioe) {
-			// Handle any exceptions that may occur.
-			// Here you would want to perform some exception handling suited to
-			// your application which may include
-			// distinguishing the type of exception and handling appropriately.
-			// For example you may want to handle
-			// authentication problems separately so that the user will know
-			// their credentials caused the problem.
 			System.err.println("Error: " + ioe.getMessage());
 		} catch (JSONException e) {
 			System.err.println("Error: " + e.getMessage());
+		} catch (RestException e) {
+			System.err.println("Error: " + e.getMessage());
 		}
-		// code added above to test search
-
 		return blueworksProcesses;
 	}
 
-	public BlueworksProcess getProcessById(String processId, String testVar)
+	public BlueworksProcess getBlueworksProcessByItemId(String itemId)
 			throws UnauthorizedException {
-		// I assume that the process still exists, if not - exception will be
-		// thrown
+		StringBuilder followedProcessesRequest = new StringBuilder(
+				REST_API_CALL_FOLLOWED_PROCESSES).append("?");
+		BlueworksProcess foundProcess = null;
 		try {
-			String accountId = validateUser(api_username, api_password);
-			if (accountId == null) {
-				System.err.println("Account id is null");
-				System.exit(1);
-			}
+			JSONObject followedProcessesResult = makeApiCall(followedProcessesRequest
+					.toString());
+			JSONArray processes = (JSONArray) followedProcessesResult
+					.get("followedProcesses");
+			for (Object jsonObject : processes) {
+				JSONObject process = (JSONObject) jsonObject;
 
-			StringBuilder requestURL = new StringBuilder(
-					REST_API_CALL_PROCESS_DATA);
-			requestURL.append("?version=").append(REST_API_VERSION);
-			requestURL.append("&accountId=").append(accountId);
-			HttpURLConnection restApiURLConnection = getRestApiConnection(
-					requestURL.toString(), api_username, api_password);
-			if (restApiURLConnection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-				System.err.println("Error calling the Blueworks Live REST API.");
-				System.exit(1);
+				String processId = process.getString("processId");
+				List<BlueworksProcessActivity> processActivities = getProcessActivitiesForProcess(processId);
+
+				BlueworksProcess outputProcess = new BlueworksProcess(
+						processId,
+						process.getString("name"),
+						process.getString("modifiedUserName"),
+						BWL_DATE_FORMAT.parse(process.getString("modifiedDate")));
+				outputProcess.setProcessActivities(processActivities);
+				// It was process
+				if (processId.equals(itemId)) {
+
+					// Obtaining process documentation
+					// TODO: RB - Do we need all the activities documentation?
+					// I think, no
+
+					/*
+					 * for (BlueworksProcessActivity activity :
+					 * processActivities) {
+					 * setDocumentationForActivity(activity); }
+					 */
+					foundProcess = outputProcess;
+					return foundProcess;
+				} else {
+					for (BlueworksProcessActivity activity : processActivities) {
+						if (activity.getActivityId() != null
+								&& activity.getActivityId().equals(itemId)) {
+							setDocumentationForActivity(activity);
+							foundProcess = outputProcess;
+							return foundProcess;
+						}
+					}
+				}
 			}
-			
-			InputStream restApiStream = restApiURLConnection.getInputStream();
-			
-			try {
-				JSONObject requestResult = new JSONObject(restApiStream);
-			} catch (JSONException e) {
-				System.err.println("Invalid JSON output");
-				e.printStackTrace();
-			}
+		} catch (RestException e) {
+			System.err.println("Error: " + e.getMessage());
 		} catch (JSONException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
+			System.err.println("Error: " + e.getMessage());
+		} catch (ParseException e) {
+			System.err.println("Parse exception caught");
+		}
+
+		return foundProcess;
+	}
+
+	// TODO: RB - REWRITE, we have Search call!
+	public BlueworksProcess getBlueworksItemById(String processId, String testVar)
+			throws UnauthorizedException {
+
+		JSONObject processData = isProcess(processId);
+
+		if (processData != null) {
+			try {
+				JSONObject items = (JSONObject) processData.get("items");
+				JSONObject processInfo = (JSONObject) items.get(processId);
+
+				String processName = (String) processInfo.get("name");
+
+				BlueworksProcess foundProcess = new BlueworksProcess(processId,
+						processName);
+				// setProcessActivitiesForProcess(foundProcess, processData);
+			} catch (JSONException e) {
+				System.err.println("Error: " + e.getMessage());
+			}
+		} else {
+
 		}
 		return null;
 	}
 
+	// Using not the best mechanism for checking, return ProcessData if the
+	// process exists
+	// TODO: RB - maybe remove after isProcess method
+	public JSONObject isProcess(String blueworksItemId)
+			throws UnauthorizedException {
+		StringBuilder reqUrlBuilder = new StringBuilder(
+				REST_API_CALL_PROCESS_DATA);
+		reqUrlBuilder.append("?processId=").append(blueworksItemId);
+
+		JSONObject apiCallResult = null;
+		try {
+			apiCallResult = makeApiCall(reqUrlBuilder.toString());
+		} catch (RestException e) {
+			/* OK */
+		}
+		return apiCallResult;
+	}
+
+	private List<BlueworksProcessActivity> getProcessActivitiesForProcess(
+			String processId) {
+		List<BlueworksProcessActivity> processActivitiesList = new ArrayList<BlueworksProcessActivity>();
+		try {
+			StringBuilder processDataRequest = new StringBuilder(
+					REST_API_CALL_PROCESS_DATA);
+			processDataRequest.append("?processId=").append(processId);
+			JSONObject reqResult = makeApiCall(processDataRequest.toString());
+
+			JSONObject activities = (JSONObject) reqResult.get("items");
+
+			Set<String> set = activities.keySet();
+			Iterator<String> iterator = set.iterator();
+
+			// Iterate over the set of activities
+			while (iterator.hasNext()) {
+
+				// First get the activity ID
+				String activityId = iterator.next();
+
+				// Then get the associated JSON activity from within the object
+				JSONObject activity = (JSONObject) activities.get(activityId);
+
+				// Now check that it's an element we're actually interested in
+				// Let's get the Activity Type and Activity Major Type
+
+				// If the activity has a type and major type, then set them
+
+				String activityType = "";
+				String activityMajorType = "";
+
+				if (activity.containsKey("itemType")) {
+					activityType = activity.getString("itemType");
+				}
+
+				if (activity.containsKey("majorType")) {
+					activityMajorType = activity.getString("majorType");
+				}
+
+				if (activityType.equals("ACTIVITY")
+						&& activityMajorType.equals("activity")) {
+					BlueworksProcessActivity processActivity = new BlueworksProcessActivity(
+							processId, activityId, activity.getString("name"),
+							activityType, activityMajorType);
+
+					processActivitiesList.add(processActivity);
+				}
+			}
+		} catch (RestException e) {
+			System.err.println("Error: " + e.getMessage());
+		} catch (JSONException e) {
+			System.err.println("Error: " + e.getMessage());
+		}
+
+		return processActivitiesList;
+	}
+
+	private void setProcessActivitiesForProcess(BlueworksProcess parentProcess)
+			throws JSONException, UnauthorizedException, RestException {
+		StringBuilder processDataRequest = new StringBuilder(
+				REST_API_CALL_PROCESS_DATA);
+		processDataRequest.append("?processId=").append(
+				parentProcess.getProcessId());
+		JSONObject processData = makeApiCall(processDataRequest.toString());
+
+		List<BlueworksProcessActivity> processActivities = new ArrayList<BlueworksProcessActivity>();
+		JSONObject activities = (JSONObject) processData.get("items");
+		Set<String> set = activities.keySet();
+		Iterator<String> iterator = set.iterator();
+
+		// Iterate over the set of activities
+		while (iterator.hasNext()) {
+
+			// First get the activity ID
+			String activityId = iterator.next();
+
+			// Then get the associated JSON activity from within the object
+			JSONObject activity = (JSONObject) activities.get(activityId);
+
+			String activityType = "";
+			String activityMajorType = "";
+
+			if (activity.containsKey("itemType")) {
+				activityType = activity.getString("itemType");
+			}
+
+			if (activity.containsKey("majorType")) {
+				activityMajorType = activity.getString("majorType");
+			}
+
+			// Now determine if the activity type and major type are ones we're
+			// interested in
+			if (activityType.equals("ACTIVITY")
+					&& activityMajorType.equals("activity")) {
+				BlueworksProcessActivity processActivity = new BlueworksProcessActivity(
+						parentProcess.getProcessId(), activityId,
+						activity.getString("name"), activityType,
+						activityMajorType);
+				// Getting activity documentation
+				setDocumentationForActivity(processActivity);
+				processActivities.add(processActivity);
+			}
+		}
+		parentProcess.setProcessActivities(processActivities);
+	}
+
+	private void setDocumentationForActivity(BlueworksProcessActivity activity)
+			throws UnauthorizedException {
+		// Make the call to Blueworks to get the documentation for the activity
+		StringBuilder reqURL = new StringBuilder(
+				REST_API_CALL_ACTIVITY_DOCUMENTATION);
+		reqURL.append("?processId=").append(activity.getProcessId());
+		reqURL.append("&activityId=").append(activity.getActivityId());
+		try {
+			JSONObject reqResult = makeApiCall(reqURL.toString());
+
+			// If there is a documentation field, get it and add it to the
+			// object
+			if (reqResult.containsKey("description")) {
+				activity.setActivityDocumentation(reqResult
+						.getString("description"));
+			}
+		} catch (JSONException e) {
+			activity.setActivityDocumentation("Not avaliable");
+		} catch (RestException e) {
+			activity.setActivityDocumentation("Not avaliable");
+		}
+	}
+
+	@Deprecated
 	public BlueworksProcess getProcessById(String processId)
 			throws UnauthorizedException {
 		// TODO: optimize it, performance problems!
@@ -541,6 +707,7 @@ public class BlueworksRestApiClient {
 
 	}
 
+	@Deprecated
 	// Private method to handle looking up the associated process activities for
 	// a given process
 	private List<BlueworksProcessActivity> getProcessActivitesForProcess(
@@ -644,6 +811,7 @@ public class BlueworksRestApiClient {
 
 	}
 
+	@Deprecated
 	private BlueworksProcessActivity getDocumentationForActivity(
 			BlueworksProcessActivity blueworksProcessActivity)
 			throws IOException, JSONException, UnauthorizedException {
@@ -698,5 +866,39 @@ public class BlueworksRestApiClient {
 		BlueworksProcessActivity processActivityWithDocumentation = blueworksProcessActivity;
 		return processActivityWithDocumentation;
 
+	}
+
+	public static void main(String[] args) throws UnauthorizedException,
+			RestException {
+		BlueworksRestApiClient client = new BlueworksRestApiClient();
+		client.api_username = "ruslan_bakeyev@cz.ibm.com";
+		client.api_password = "1q2w3e4r";
+
+		boolean checkProcess = false;
+		if (checkProcess) {
+			long startTime = System.currentTimeMillis();
+			System.out.println("started");
+			client.getBlueworksProcessByItemId("49eae0edea");
+			long endTime = System.currentTimeMillis();
+			System.out.println("ended: " + (endTime - startTime) / 1000);
+			long startTime2 = System.currentTimeMillis();
+			System.out.println("started2");
+			client.getProcessById("49eae0edea");
+			System.out.println("ended2");
+			long endTime2 = System.currentTimeMillis();
+			System.out.println("ended: " + (endTime2 - startTime2) / 1000);
+		} else {
+			long startTime = System.currentTimeMillis();
+			System.out.println("started");
+			client.getBlueworksProcessByItemId("49eae0edfd");
+			long endTime = System.currentTimeMillis();
+			System.out.println("ended: " + (endTime - startTime) / 1000);
+			long startTime2 = System.currentTimeMillis();
+			System.out.println("started2");
+			client.getProcessById("49eae0edfd");
+			System.out.println("ended2");
+			long endTime2 = System.currentTimeMillis();
+			System.out.println("ended: " + (endTime2 - startTime2) / 1000);
+		}
 	}
 }

@@ -34,9 +34,6 @@ public interface Constants
     public static String REQUIREMENTS_MANAGEMENT_PREFIX              = "oslc_rm";
     public static String SOFTWARE_CONFIGURATION_MANAGEMENT_NAMESPACE = "http://open-services.net/ns/scm#";
     public static String SOFTWARE_CONFIGURATION_MANAGEMENT_PREFIX    = "oslc_scm";
-    public static String BUGZILLA_DOMAIN							 = "http://www.bugzilla.org/rdf#"; 
-    public static String BUGZILLA_NAMESPACE							 = "http://www.bugzilla.org/rdf#";
-    public static String BUGZILLA_NAMESPACE_PREFIX					 = "bugz";
 
 
     public static String CHANGE_REQUEST             = "ChangeRequest";
@@ -52,6 +49,7 @@ public interface Constants
     public static String TYPE_TEST_SCRIPT           = QUALITY_MANAGEMENT_NAMESPACE + "TestScript";
 
     public static String PATH_CHANGE_REQUEST = "changeRequest";
+    public static String PATH_REQUIREMENT = "requirement";
 
     public static String USAGE_LIST = CHANGE_MANAGEMENT_NAMESPACE + "list";
     

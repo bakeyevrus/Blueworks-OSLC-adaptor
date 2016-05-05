@@ -50,7 +50,7 @@ import org.eclipse.lyo.oslc4j.provider.json4j.Json4JProvidersRegistry;
 import uk.ibm.com.oslc.Constants;
 import uk.ibm.com.oslc.resources.OSLCRequirement;
 import uk.ibm.com.oslc.resources.Person;
-import uk.ibm.com.oslc.services.BugzillaChangeRequestService;
+import uk.ibm.com.oslc.services.BlueworksRequirementService;
 
 public class BlueworksLiveApplication extends OslcWinkApplication {
 
@@ -63,7 +63,7 @@ public class BlueworksLiveApplication extends OslcWinkApplication {
     	{
     		RESOURCE_CLASSES.addAll(JenaProvidersRegistry.getProviders());
     		RESOURCE_CLASSES.addAll(Json4JProvidersRegistry.getProviders());
-    		RESOURCE_CLASSES.add(BugzillaChangeRequestService.class);
+    		RESOURCE_CLASSES.add(BlueworksRequirementService.class);
     		RESOURCE_CLASSES.add(Person.class);
     		
     		RESOURCE_CLASSES.add(Class.forName("org.eclipse.lyo.server.oauth.webapp.services.ConsumersService"));

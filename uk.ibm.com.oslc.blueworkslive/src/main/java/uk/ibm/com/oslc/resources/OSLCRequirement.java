@@ -23,6 +23,7 @@ import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
+import org.apache.wink.common.model.wadl.Request;
 import org.eclipse.lyo.oslc4j.core.annotation.OslcDescription;
 import org.eclipse.lyo.oslc4j.core.annotation.OslcName;
 import org.eclipse.lyo.oslc4j.core.annotation.OslcNamespace;
@@ -34,39 +35,33 @@ import org.eclipse.lyo.oslc4j.core.annotation.OslcTitle;
 import org.eclipse.lyo.oslc4j.core.model.Occurs;
 
 import uk.ibm.com.oslc.Constants;
+import uk.ibm.com.oslc.blueworks.BlueworksProcess;
+import uk.ibm.com.oslc.blueworks.BlueworksProcessActivity;
+import uk.ibm.com.oslc.exception.UnauthorizedException;
 import uk.ibm.com.oslc.rm.IRequirementsConnector;
 import uk.ibm.com.oslc.rm.RequirementInfo;
 
-import com.j2bugzilla.base.Bug;
-import com.j2bugzilla.base.BugFactory;
-import com.j2bugzilla.base.BugzillaException;
-import com.j2bugzilla.base.ConnectionException;
-
-//OSLC4J should give an rdf:type of oslc_cm:ChangeRequest
+//OSLC4J should give an rdf:type of oslc_rm:Requrements
 @OslcNamespace(Constants.REQUIREMENTS_MANAGEMENT_NAMESPACE)
 @OslcName(Constants.TYPE_REQUIREMENT)
-@OslcResourceShape(title = "Change Request Resource Shape", describes = Constants.TYPE_CHANGE_REQUEST)
-public final class OSLCRequirement extends ChangeRequest {
+@OslcResourceShape(title = "Requirements Management Resource Shape", describes = Constants.TYPE_REQUIREMENT)
+public final class OSLCRequirement extends Requirement {
+
 	public OSLCRequirement() throws URISyntaxException {
 		super();
-
 	}
 
 	public OSLCRequirement(URI about) throws URISyntaxException {
 		super(about);
-
 	}
 
-	// Bugzilla extended attributes beyond OSLC base ChangeRequest
+	// Blueworks extended attributes beyond OSLC base Requirement
 	private String requirementType = null;
+	// TODO: RB - What is subtype?
+	// TODO: RB - OSLC Annotations to parameters
 	private String requirementSubType = null;
 	private String parentName = null;
 	private String childrenNames = "";
-	private String component = null;
-	private String version = null;
-	private String priority = null;
-	private String platform = null;
-	private String operatingSystem = null;
 	private String displayIndent = "";
 	private String lastModifiedBy = null;
 
@@ -78,67 +73,148 @@ public final class OSLCRequirement extends ChangeRequest {
 		this.displayIndent = displayIndent;
 	}
 
-	@OslcDescription("The Bugzilla product definition for this change request.")
-	@OslcOccurs(Occurs.ZeroOrOne)
-	@OslcPropertyDefinition(Constants.BUGZILLA_NAMESPACE + "component")
-	@OslcTitle("Component")
-	public String getComponent() {
-		return component;
+	public void setIdentifier(int identifier) throws URISyntaxException {
+		setIdentifier(Integer.toString(identifier));
 	}
 
-	public void setComponent(String component) {
-		this.component = component;
+	public String getRequirementType() {
+		return requirementType;
 	}
 
-	@OslcDescription("The Bugzilla version for this change request.")
-	@OslcOccurs(Occurs.ZeroOrOne)
-	@OslcReadOnly
-	@OslcPropertyDefinition(Constants.BUGZILLA_NAMESPACE + "version")
-	@OslcTitle("Version")
-	public String getVersion() {
-		return version;
+	public void setRequirementType(String product) {
+		this.requirementType = product;
 	}
 
-	public void setVersion(String version) {
-		this.version = version;
+	// TODO: RB - Possible remove this property
+	public String getRequirementSubType() {
+		return requirementSubType;
 	}
 
-	@OslcDescription("The Bugzilla priority for this change request.")
-	@OslcOccurs(Occurs.ZeroOrOne)
-	@OslcPropertyDefinition(Constants.BUGZILLA_NAMESPACE + "priority")
-	@OslcTitle("Priority")
-	public String getPriority() {
-		return priority;
+	public void setRequirementSubType(String requirementSubType) {
+		this.requirementSubType = requirementSubType;
 	}
 
-	public void setPriority(String priority) {
-		this.priority = priority;
+	public String getParentName() {
+		return parentName;
 	}
 
-	@OslcDescription("The Bugzilla platform for this change request.")
-	@OslcOccurs(Occurs.ZeroOrOne)
-	@OslcPropertyDefinition(Constants.BUGZILLA_NAMESPACE + "platform")
-	@OslcTitle("Platform")
-	public String getPlatform() {
-		return platform;
+	public void setParentName(String parentName) {
+		this.parentName = parentName;
 	}
 
-	public void setPlatform(String platform) {
-		this.platform = platform;
+	public String getChildrenNames() {
+		return childrenNames;
 	}
 
-	@OslcDescription("The Bugzilla operating system for this change request.")
-	@OslcOccurs(Occurs.ZeroOrOne)
-	@OslcPropertyDefinition(Constants.BUGZILLA_NAMESPACE + "operatingSystem")
-	@OslcTitle("Operating System")
-	public String getOperatingSystem() {
-		return operatingSystem;
+	public void addChildNames(String childName) {
+		if (childrenNames != null && !"".equals(childrenNames)) {
+			childrenNames = childrenNames + "";
+		}
+		childrenNames = childrenNames + childName;
 	}
 
-	public void setOperatingSystem(String operatingSystem) {
-		this.operatingSystem = operatingSystem;
+	public String getModifiedDateAsString() {
+		String formattedString = "unknown";
+		if (getModified() != null) {
+			SimpleDateFormat format = new SimpleDateFormat(
+					"EEE, MMM d, yyyy HH:mm");
+			formattedString = format.format(getModified());
+		}
+		return formattedString;
 	}
 
+	public String getLastModifiedBy() {
+		return lastModifiedBy;
+	}
+
+	public void setLastModifiedBy(String lastModifiedBy) {
+		this.lastModifiedBy = lastModifiedBy;
+	}
+
+	public static OSLCRequirement fromBlueworksItem(BlueworksProcess process,
+			String itemId) throws URISyntaxException {
+
+		// Now check if it actually was a process
+		if (process.getProcessId().equals(itemId)) {
+			// If yes - then get it as a RequirementInfo object
+			return OSLCRequirement.fromBlueworksProcess(process);
+		} else {
+			// Find the activity that matches the ID and then return that
+			// instead
+			for (BlueworksProcessActivity blueworksActivity : process
+					.getProcessActivities()) {
+
+				if (blueworksActivity.getActivityId().equals(itemId)) {
+					return OSLCRequirement.fromBlueworksProcessActivity(
+							blueworksActivity, process);
+				}
+			}
+
+		}
+		return null;
+	}
+
+	private static OSLCRequirement fromBlueworksProcess(BlueworksProcess process)
+			throws URISyntaxException {
+		OSLCRequirement req = new OSLCRequirement();
+		req.setIdentifier(process.getProcessId());
+		req.setTitle(process.getName());
+		req.setRequirementType(process.getType());
+		req.setModified(process.getModifiedDate());
+		req.setParentName("None");
+
+		String owner = process.getModifiedUserName();
+		if (owner == null || "".equals(owner)) {
+			req.setLastModifiedBy("Unknown");
+		} else {
+			req.setLastModifiedBy(owner);
+		}
+
+		List<BlueworksProcessActivity> children = process
+				.getProcessActivities();
+		if (children == null || children.size() == 0) {
+			req.addChildNames("None");
+		} else {
+			for (BlueworksProcessActivity activity : children) {
+				String childLink = "<li><a target=\"_blank\" href=\""
+						+ IRequirementsConnector.getInstance()
+								.getEndpointStringForProcessActivity(activity)
+						+ "\" >" + activity.getActivityName() + "</a></li>";
+				req.addChildNames(childLink);
+			}
+		}
+
+		return req;
+	}
+
+	private static OSLCRequirement fromBlueworksProcessActivity(
+			BlueworksProcessActivity activity, BlueworksProcess parentProcess)
+			throws URISyntaxException {
+		OSLCRequirement req = new OSLCRequirement();
+		req.setIdentifier(activity.getActivityId());
+		req.setTitle(activity.getActivityName());
+		req.setRequirementType(activity.getType());
+		req.setModified(null);
+
+		String parentEndPoint = IRequirementsConnector.getInstance()
+				.getEndpointStringForProcess(parentProcess);
+		String parentName = parentProcess.getName();
+		String parentLink = "<a target=\"_blank\" href=\"" + parentEndPoint
+				+ "\" >" + parentName + "</a>";
+		req.setParentName(parentLink);
+
+		String doc = activity.getActivityDocumentation();
+		if (doc == null || doc.equals("")) {
+			doc = "<i>Unfortunately the description is not available from BlueWorksLive</i>";
+		}
+		req.setDescription(doc);
+		req.addChildNames("None");
+		req.setLastModifiedBy("Unknown");
+
+		return req;
+	}
+
+	@Deprecated
 	/**
 	 * Converts a {@link Bug} to an OSLC-CM OSLCRequirement.
 	 * 
@@ -155,13 +231,12 @@ public final class OSLCRequirement extends ChangeRequest {
 		changeRequest.setIdentifier(req.getId());
 		changeRequest.setTitle(req.getName());
 		changeRequest.setRequirementType(req.getType());
+		// TODO: RB - try to find if the files subType != null
 		changeRequest.setRequirementSubType(req.getSubType());
 		changeRequest.setModified(req.getLastModified());
 		if (req.getParent() == null || "".equals(req.getParent())) {
 			changeRequest.setParentName("None");
 		} else {
-			// There are some problems with perfomance
-			// TODO: try to optimize it!
 			RequirementInfo parentInfo = IRequirementsConnector.getInstance()
 					.getRequirementById(req.getParent());
 			String parentEndPoint = IRequirementsConnector.getInstance()
@@ -205,6 +280,7 @@ public final class OSLCRequirement extends ChangeRequest {
 		return changeRequest;
 	}
 
+	@Deprecated
 	/*
 	 * Ok, we have a similar method, but it is too slow to get the parent info
 	 * from Blueworks again and again, that's why we are passing info about a
@@ -253,103 +329,7 @@ public final class OSLCRequirement extends ChangeRequest {
 		} else {
 			changeRequest.setLastModifiedBy(owner);
 		}
-		
+
 		return changeRequest;
-	}
-
-	/**
-	 * Creates a {@link Bug} from an OSLC-CM ChangeRequest.
-	 * 
-	 * @param bug
-	 *            the bug
-	 * @return the ChangeRequest to be serialized
-	 * @throws BugzillaException
-	 * @throws ConnectionException
-	 * @throws InvalidDescriptionException
-	 * @throws URISyntaxException
-	 *             on errors setting the bug URI
-	 */
-	public Bug toBug() throws ConnectionException, BugzillaException {
-		BugFactory factory = new BugFactory().newBug();
-		if (requirementType != null) {
-			factory.setProduct(requirementType);
-		}
-		if (this.getTitle() != null) {
-			factory.setSummary(this.getTitle());
-		}
-		if (this.getDescription() != null) {
-			factory.setDescription(this.getDescription());
-		}
-		if (version != null) {
-			factory.setVersion(version);
-		}
-		if (component != null) {
-			factory.setComponent(component);
-		}
-		if (platform != null) {
-			factory.setPlatform(platform);
-		}
-		if (operatingSystem != null) {
-			factory.setOperatingSystem(operatingSystem);
-		}
-
-		return factory.createBug();
-	}
-
-	public void setIdentifier(int identifier) throws URISyntaxException {
-		setIdentifier(Integer.toString(identifier));
-	}
-
-	public String getRequirementType() {
-		return requirementType;
-	}
-
-	public void setRequirementType(String product) {
-		this.requirementType = product;
-	}
-
-	public String getRequirementSubType() {
-		return requirementSubType;
-	}
-
-	public void setRequirementSubType(String requirementSubType) {
-		this.requirementSubType = requirementSubType;
-	}
-
-	public String getParentName() {
-		return parentName;
-	}
-
-	public void setParentName(String parentName) {
-		this.parentName = parentName;
-	}
-
-	public String getChildrenNames() {
-		return childrenNames;
-	}
-
-	public void addChildNames(String childName) {
-		if (childrenNames != null && !"".equals(childrenNames)) {
-			childrenNames = childrenNames + "";
-		}
-		childrenNames = childrenNames + childName;
-	}
-
-	public String getModifiedDateAsString() {
-		String formattedString = "unknown";
-		if (getModified() != null) {
-			SimpleDateFormat format = new SimpleDateFormat(
-					"EEE, MMM d, yyyy HH:mm");
-			formattedString = format.format(getModified());
-		}
-		return formattedString;
-	}
-
-	public String getLastModifiedBy() {
-		return lastModifiedBy;
-	}
-
-	public void setLastModifiedBy(String lastModifiedBy) {
-		this.lastModifiedBy = lastModifiedBy;
 	}
 }

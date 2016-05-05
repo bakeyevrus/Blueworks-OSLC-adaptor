@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
  * @author Samuel Padgett <spadgett@us.ibm.com>
  */
 public class RestException extends Exception {
+	
 	private int statusCode;
 	private String message;
 	

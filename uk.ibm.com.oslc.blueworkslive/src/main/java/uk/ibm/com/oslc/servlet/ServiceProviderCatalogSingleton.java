@@ -233,7 +233,7 @@ public class ServiceProviderCatalogSingleton {
 	 * 
 	 * Each product ID is added to the parameter map which will be used during
 	 * service provider creation to create unique URI paths for each Bugzilla
-	 * product. See @Path definition at the top of BugzillaChangeRequestService.
+	 * product. See @Path definition at the top of BlueworksRequirementService.
 	 * 
 	 * @param httpServletRequest
 	 */
@@ -241,9 +241,9 @@ public class ServiceProviderCatalogSingleton {
 			HttpServletRequest httpServletRequest) {
 
 		try {
-			// TODO: RB - Do we need that?
+			
 			// IRequirementsConnector bc =
-			// ApplicationManager.getRequirementsConnector(httpServletRequest);
+			//ApplicationManager.getRequirementsConnector(httpServletRequest);
 
 			Map<String, String> sp = IRequirementsConnector
 					.getInstance().getServiceProviderCatalog();
@@ -259,7 +259,6 @@ public class ServiceProviderCatalogSingleton {
 
 					Map<String, Object> parameterMap = new HashMap<String, Object>();
 					parameterMap.put("productId", spId);
-					//TODO: RB - Rename according to the OSLC RM specification
 					final ServiceProvider blueworksServiceProvider = BlueworksServiceProviderFactory
 							.createServiceProvider(basePath, serviceProviderName,
 									parameterMap);

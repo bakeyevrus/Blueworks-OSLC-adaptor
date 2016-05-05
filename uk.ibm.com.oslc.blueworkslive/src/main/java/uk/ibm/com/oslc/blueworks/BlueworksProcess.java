@@ -8,12 +8,22 @@ import uk.ibm.com.oslc.rm.RequirementInfo;
 
 public class BlueworksProcess {
 	
+	private static String TYPE = "PROCESS";
+	
 	private String processId = null;
 	private String name = null;
 	private String modifiedUserName = null;
 	private Date modifiedDate = null;
 	private List<BlueworksProcessActivity> processActivities;
-
+	
+	public BlueworksProcess(String processId, String processName) {
+		super();
+		this.processId = processId;
+		this.name = processName;
+		this.modifiedUserName = "Unknown";
+		this.modifiedDate = null;
+	}
+	
 	public BlueworksProcess(String processId, String name,
 			String modifiedUserName, Date modifiedDate) {
 		super();
@@ -62,6 +72,10 @@ public class BlueworksProcess {
 	public void setProcessActivities(
 			List<BlueworksProcessActivity> processActivities) {
 		this.processActivities = processActivities;
+	}
+	
+	public String getType() {
+		return TYPE;
 	}
 
 	public RequirementInfo toRequirementInfo() {

@@ -33,13 +33,13 @@ import org.eclipse.lyo.oslc4j.core.model.ServiceProviderFactory;
 
 import uk.ibm.com.oslc.Constants;
 import uk.ibm.com.oslc.services.BlueworksChangeRequestService;
-import uk.ibm.com.oslc.services.BugzillaChangeRequestService;
+import uk.ibm.com.oslc.services.BlueworksRequirementService;
 
 public class BlueworksServiceProviderFactory
 {
     private static Class<?>[] RESOURCE_CLASSES =
     {
-        BugzillaChangeRequestService.class,
+        BlueworksRequirementService.class,
         // TODO: RB - Return it
         //  BlueworksChangeRequestService.class
     };

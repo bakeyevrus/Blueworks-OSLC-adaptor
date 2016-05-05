@@ -23,7 +23,6 @@
     @OslcNamespaceDefinition(prefix = OslcConstants.RDF_NAMESPACE_PREFIX,                 namespaceURI = OslcConstants.RDF_NAMESPACE),
     @OslcNamespaceDefinition(prefix = OslcConstants.RDFS_NAMESPACE_PREFIX,                namespaceURI = OslcConstants.RDFS_NAMESPACE),
     @OslcNamespaceDefinition(prefix = Constants.CHANGE_MANAGEMENT_NAMESPACE_PREFIX,       namespaceURI = Constants.CHANGE_MANAGEMENT_NAMESPACE),
-    @OslcNamespaceDefinition(prefix = Constants.BUGZILLA_NAMESPACE_PREFIX,				  namespaceURI = Constants.BUGZILLA_NAMESPACE),
     @OslcNamespaceDefinition(prefix = Constants.FOAF_NAMESPACE_PREFIX,                    namespaceURI = Constants.FOAF_NAMESPACE),
     @OslcNamespaceDefinition(prefix = Constants.QUALITY_MANAGEMENT_PREFIX,                namespaceURI = Constants.QUALITY_MANAGEMENT_NAMESPACE),
     @OslcNamespaceDefinition(prefix = Constants.REQUIREMENTS_MANAGEMENT_PREFIX,           namespaceURI = Constants.REQUIREMENTS_MANAGEMENT_NAMESPACE),
