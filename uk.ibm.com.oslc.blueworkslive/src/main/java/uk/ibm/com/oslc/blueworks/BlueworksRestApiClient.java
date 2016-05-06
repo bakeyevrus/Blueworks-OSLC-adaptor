@@ -110,7 +110,8 @@ public class BlueworksRestApiClient {
 	 * require different input parameters and return different formats of
 	 * results.
 	 */
-	private final static String REST_API_VERSION = "20150930";
+	private final static String REST_API_VERSION_FOR_AUTH_REQUEST = "20110917";
+	private final static String REST_API_VERSION_FOR_SEARCH_REQUEST = "20150930";
 
 	/*
 	 * Date format string to use for BlueworksLive
@@ -173,7 +174,7 @@ public class BlueworksRestApiClient {
 
 		// Authenticate with the server
 		StringBuilder authUrlBuilder = new StringBuilder(REST_API_CALL_AUTH);
-		authUrlBuilder.append("?version=").append(REST_API_VERSION);
+		authUrlBuilder.append("?version=").append(REST_API_VERSION_FOR_AUTH_REQUEST);
 		HttpURLConnection restApiURLConnection = getRestApiConnection(
 				authUrlBuilder.toString(), username, password);
 		if (restApiURLConnection.getResponseCode() != HttpURLConnection.HTTP_OK) {
@@ -261,86 +262,6 @@ public class BlueworksRestApiClient {
 		return apiCallResult;
 	}
 
-	@Deprecated
-	public List<BlueworksProcess> getProcesses() throws UnauthorizedException {
-		List<BlueworksProcess> blueworksProcesses = new ArrayList<BlueworksProcess>();
-		try {
-			// Validate user and determine which account to use
-			String accountId = validateUser(this.api_username,
-					this.api_password);
-			if (accountId == null) {
-				System.exit(1);
-			}
-
-			// Call the REST APIs. In this example we are calling the api to
-			// return the list of processes.
-			StringBuilder appListUrlBuilder = new StringBuilder(
-					REST_API_CALL_FOLLOWED_PROCESSES);
-			appListUrlBuilder.append("?version=").append(REST_API_VERSION);
-			// Pass the account id we are using for this user
-			appListUrlBuilder.append("&accountId=").append(accountId);
-			HttpURLConnection restApiURLConnection = getRestApiConnection(
-					appListUrlBuilder.toString(), this.api_username,
-					this.api_password);
-			if (restApiURLConnection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-				System.err
-						.println("Error calling the Blueworks Live REST API.");
-				System.exit(1);
-			}
-
-			// Process the JSON result. In this example we print the name of
-			// each process
-			InputStream restApiStream = restApiURLConnection.getInputStream();
-			try {
-				JSONObject appListResult = new JSONObject(restApiStream);
-				JSONArray processes = (JSONArray) appListResult
-						.get("followedProcesses");
-				for (Object jsonObject : processes) {
-					JSONObject jsonProcess = (JSONObject) jsonObject;
-
-					// Extract the process information from the JSON response so
-					// we can refer to it easily (we'll add the activity
-					// information in later)
-					BlueworksProcess blueworksProcess = new BlueworksProcess(
-							jsonProcess.getString("processId"),
-							jsonProcess.getString("name"),
-							jsonProcess.getString("modifiedUserName"),
-							BWL_DATE_FORMAT.parse(jsonProcess
-									.getString("modifiedDate")));
-
-					// Get the process activities associated with this process
-					List<BlueworksProcessActivity> processActivities = getProcessActivitesForProcess(
-							accountId, blueworksProcess);
-
-					// Add the activities list to the blueworksProcess we set up
-					blueworksProcess.setProcessActivities(processActivities);
-
-					// Add the blueworks process to the list
-					blueworksProcesses.add(blueworksProcess);
-				}
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} finally {
-				// Cleanup an streams we have opened
-				restApiStream.close();
-			}
-
-		} catch (IOException ioe) {
-			// Handle any exceptions that may occur.
-			// Here you would want to perform some exception handling suited to
-			// your application which may include
-			// distinguishing the type of exception and handling appropriately.
-			// For example you may want to handle
-			// authentication problems separately so that the user will know
-			// their credentials caused the problem.
-			System.err.println("Error: " + ioe.getMessage());
-		} catch (JSONException e) {
-			System.err.println("Error: " + e.getMessage());
-		}
-		return blueworksProcesses;
-	}
-
 	// method to search for processes given an input string
 	public List<BlueworksProcess> searchProcesses(String searchTerms)
 			throws UnauthorizedException {
@@ -354,7 +275,7 @@ public class BlueworksRestApiClient {
 		try {
 
 			StringBuilder reqURL = new StringBuilder(REST_API_CALL_SEARCH);
-			reqURL.append("?version=").append(REST_API_VERSION);
+			reqURL.append("?version=").append(REST_API_VERSION_FOR_SEARCH_REQUEST);
 			reqURL.append("&searchFieldName=process_name");
 			reqURL.append("&searchValue=").append(
 					URLEncoder.encode(searchTerms, "UTF-8"));
@@ -662,212 +583,6 @@ public class BlueworksRestApiClient {
 		}
 	}
 
-	@Deprecated
-	public BlueworksProcess getProcessById(String processId)
-			throws UnauthorizedException {
-		// TODO: optimize it, performance problems!
-		List<BlueworksProcess> results = getProcesses();
-		BlueworksProcess foundProcess = null;
-		try {
-			for (BlueworksProcess blueworksProcess : results) {
-				if (blueworksProcess.getProcessId() != null
-						&& blueworksProcess.getProcessId().equals(processId)) {
-					foundProcess = blueworksProcess;
-					// TODO: check for bugs break solution
-					break;
-				}
-				// If we can't find it directly, let's look inside the child
-				// activities
-				else {
-					List<BlueworksProcessActivity> activities = blueworksProcess
-							.getProcessActivities();
-					for (BlueworksProcessActivity activity : activities) {
-						if (activity.getActivityId() != null
-								&& activity.getActivityId().equals(processId)) {
-							// Get the Activity Documentation first
-							activity = getDocumentationForActivity(activity);
-
-							// Even though we know it's an activity, return the
-							// whole process object
-							foundProcess = blueworksProcess;
-							// TODO: check for bugs break solution
-							return foundProcess;
-						}
-					}
-				}
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return foundProcess;
-
-	}
-
-	@Deprecated
-	// Private method to handle looking up the associated process activities for
-	// a given process
-	private List<BlueworksProcessActivity> getProcessActivitesForProcess(
-			String accountId, BlueworksProcess blueworksProcess)
-			throws IOException, JSONException {
-
-		// TODO :: move this into a new try/catch block
-		// TODO : migration to the last API version
-		// Now try to get the underlying activities associated with each process
-		StringBuilder appListUrlBuilder = new StringBuilder(
-				REST_API_CALL_PROCESS_DATA);
-		appListUrlBuilder.append("?version=").append(REST_API_VERSION);
-		// Pass the account id we are using for this user
-		appListUrlBuilder.append("&accountId=").append(accountId);
-		appListUrlBuilder.append("&processId=").append(
-				blueworksProcess.getProcessId());
-		HttpURLConnection restApiURLConnection = getRestApiConnection(
-				appListUrlBuilder.toString(), this.api_username,
-				this.api_password);
-
-		// Set up a list of process activities for this process
-		List<BlueworksProcessActivity> processActivities = new ArrayList<BlueworksProcessActivity>();
-
-		// Process the response code from the call to ProcessData. For some
-		// reason it returns a 403 for Process Apps - not sure why.
-		// need to be more selective in what we ignore here - probably just 403s
-		// - so ignore themif its just a 403
-		if (restApiURLConnection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-			if (restApiURLConnection.getResponseCode() != HttpURLConnection.HTTP_FORBIDDEN) {
-				System.err.println("HTTP Response code from ProcessData: "
-						+ restApiURLConnection.getResponseCode());
-				System.err.println("User does not have access to the process.");
-			}
-			// skip trying to process the activities for this process.
-			return processActivities;
-		}
-
-		// Get the set of activities for this process from the input stream
-		InputStream restApiStream = restApiURLConnection.getInputStream();
-
-		JSONObject appListResult = new JSONObject(restApiStream);
-		JSONObject activities = (JSONObject) appListResult.get("items");
-		// System.out.println("Activities object: " + activities.toString());
-
-		Set<String> set = activities.keySet();
-		Iterator<String> iterator = set.iterator();
-
-		// Iterate over the set of activities
-		while (iterator.hasNext()) {
-
-			// First get the activity ID
-			String activityId = iterator.next();
-			// System.out.println("Activity Id is: " + activityId);
-
-			// Then get the associated JSON activity from within the object
-			JSONObject activity = (JSONObject) activities.get(activityId);
-			// System.out.println("Activity object: " + activity.toString());
-
-			// Now check that it's an element we're actually interested in
-			// Let's get the Activity Type and Activity Major Type
-
-			// If the activity has a type and major type, then set them
-
-			String activityType = "";
-			String activityMajorType = "";
-
-			if (activity.containsKey("itemType")) {
-				activityType = activity.getString("itemType");
-			}
-
-			if (activity.containsKey("majorType")) {
-				activityMajorType = activity.getString("majorType");
-			}
-
-			// System.out.println("Activity Type = " + activityType);
-			// System.out.println("Activity Major Type: " + activityMajorType);
-
-			// Now determine if the activity type and major type are ones we're
-			// interested in
-			// TODO - make this configurable
-
-			if (activityType.equals("ACTIVITY")
-					&& activityMajorType.equals("activity")) {
-				BlueworksProcessActivity processActivity = new BlueworksProcessActivity(
-						blueworksProcess.getProcessId(), activityId,
-						activity.getString("name"), activityType,
-						activityMajorType);
-
-				// System.out.println("ProcessActivity to add: " +
-				// processActivity.toString());
-
-				// Add the process activity to the list
-				processActivities.add(processActivity);
-			}
-
-		}
-
-		// System.out.println("Process Activities List Size: " +
-		// processActivities.size());
-		return processActivities;
-
-	}
-
-	@Deprecated
-	private BlueworksProcessActivity getDocumentationForActivity(
-			BlueworksProcessActivity blueworksProcessActivity)
-			throws IOException, JSONException, UnauthorizedException {
-
-		// Validate user and determine which account to use
-		String accountId;
-
-		accountId = validateUser(this.api_username, this.api_password);
-
-		if (accountId == null) {
-			System.exit(1);
-		}
-
-		// Make the call to Blueworks to get the documentation for the activity
-		StringBuilder appListUrlBuilder = new StringBuilder(
-				REST_API_CALL_ACTIVITY_DOCUMENTATION);
-		appListUrlBuilder.append("?version=").append(REST_API_VERSION);
-		// Pass the account id we are using for this user
-		appListUrlBuilder.append("&accountId=").append(accountId);
-		appListUrlBuilder.append("&processId=").append(
-				blueworksProcessActivity.getProcessId());
-		appListUrlBuilder.append("&activityId=").append(
-				blueworksProcessActivity.getActivityId());
-		HttpURLConnection restApiURLConnection = getRestApiConnection(
-				appListUrlBuilder.toString(), this.api_username,
-				this.api_password);
-
-		if (restApiURLConnection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-			if (restApiURLConnection.getResponseCode() != HttpURLConnection.HTTP_FORBIDDEN) {
-				System.err.println("HTTP Response code from ProcessData: "
-						+ restApiURLConnection.getResponseCode());
-				System.err.println("User does not have access to the process.");
-			}
-			// skip trying to process the activities for this process.
-			return blueworksProcessActivity;
-		}
-
-		// Get the set of activities for this process from the input stream
-		InputStream restApiStream = restApiURLConnection.getInputStream();
-
-		JSONObject documentationResult = new JSONObject(restApiStream);
-		// System.out.println("Activities object: " +
-		// documentationResult.toString());
-
-		// If there is a documentation field, get it and add it to the object
-		if (documentationResult.containsKey("description")) {
-			blueworksProcessActivity
-					.setActivityDocumentation(documentationResult
-							.getString("description"));
-		}
-
-		BlueworksProcessActivity processActivityWithDocumentation = blueworksProcessActivity;
-		return processActivityWithDocumentation;
-
-	}
-
 	public static void main(String[] args) throws UnauthorizedException,
 			RestException {
 		BlueworksRestApiClient client = new BlueworksRestApiClient();
@@ -883,7 +598,7 @@ public class BlueworksRestApiClient {
 			System.out.println("ended: " + (endTime - startTime) / 1000);
 			long startTime2 = System.currentTimeMillis();
 			System.out.println("started2");
-			client.getProcessById("49eae0edea");
+//			client.getProcessById("49eae0edea");
 			System.out.println("ended2");
 			long endTime2 = System.currentTimeMillis();
 			System.out.println("ended: " + (endTime2 - startTime2) / 1000);
@@ -895,7 +610,7 @@ public class BlueworksRestApiClient {
 			System.out.println("ended: " + (endTime - startTime) / 1000);
 			long startTime2 = System.currentTimeMillis();
 			System.out.println("started2");
-			client.getProcessById("49eae0edfd");
+//			client.getProcessById("49eae0edfd");
 			System.out.println("ended2");
 			long endTime2 = System.currentTimeMillis();
 			System.out.println("ended: " + (endTime2 - startTime2) / 1000);

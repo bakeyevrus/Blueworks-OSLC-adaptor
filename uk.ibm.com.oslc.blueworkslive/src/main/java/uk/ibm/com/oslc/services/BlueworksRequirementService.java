@@ -17,7 +17,6 @@
 package uk.ibm.com.oslc.services;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -65,14 +64,10 @@ import uk.ibm.com.oslc.ApplicationManager;
 import uk.ibm.com.oslc.Constants;
 import uk.ibm.com.oslc.blueworks.BlueworksProcess;
 import uk.ibm.com.oslc.blueworks.BlueworksProcessActivity;
-import uk.ibm.com.oslc.resources.ChangeRequest;
 import uk.ibm.com.oslc.resources.OSLCRequirement;
 import uk.ibm.com.oslc.resources.Requirement;
 import uk.ibm.com.oslc.rm.IRequirementsConnector;
-import uk.ibm.com.oslc.rm.RequirementInfo;
 import uk.ibm.com.oslc.servlet.ServiceProviderCatalogSingleton;
-
-import com.j2bugzilla.rpc.BugSearch;
 
 @OslcService(Constants.REQUIREMENTS_MANAGEMENT_NAMESPACE)
 @Path("{productId}/requirements")
@@ -118,7 +113,7 @@ public class BlueworksRequirementService
 	@GET
 	@Produces({ OslcMediaType.APPLICATION_RDF_XML,
 			OslcMediaType.APPLICATION_XML, OslcMediaType.APPLICATION_JSON })
-	public List<OSLCRequirement> getChangeRequests(
+	public List<OSLCRequirement> getRequirements(
 			@PathParam("productId") final String productId,
 			@QueryParam("oslc.where") final String where,
 			@QueryParam("oslc.select") final String select,
@@ -528,21 +523,38 @@ public class BlueworksRequirementService
 	 * @throws IOException
 	 * @throws ServletException
 	 */
-	@OslcDialog(title = "Requirement Creation Dialog", label = "Requirement Creation Dialog", uri = "/{productId}/requirements/creator", hintWidth = "570px", hintHeight = "500px", resourceTypes = { Constants.TYPE_REQUIREMENT }, usages = { OslcConstants.OSLC_USAGE_DEFAULT })
-	@OslcCreationFactory(title = "Requirement Creation Factory", label = "Requirement Creation", resourceShapes = { OslcConstants.PATH_RESOURCE_SHAPES
-			+ "/" + Constants.PATH_CHANGE_REQUEST }, resourceTypes = { Constants.TYPE_CHANGE_REQUEST }, usages = { OslcConstants.OSLC_USAGE_DEFAULT })
+	@OslcDialog
+	(
+	title = "Requirement Creation Dialog", 
+	label = "Requirement Creation Dialog", 
+	uri = "/{productId}/requirements/creator", 
+	hintWidth = "570px", 
+	hintHeight = "500px", 
+	resourceTypes = { Constants.TYPE_REQUIREMENT }, 
+	usages = { OslcConstants.OSLC_USAGE_DEFAULT }
+	)
+	
+	@OslcCreationFactory
+	(
+			title = "Requirement Creation Factory", 
+			label = "Requirement Creation", 
+			resourceShapes = { OslcConstants.PATH_RESOURCE_SHAPES + "/" + Constants.PATH_REQUIREMENT}, 
+			resourceTypes = { Constants.TYPE_REQUIREMENT }, 
+			usages = { OslcConstants.OSLC_USAGE_DEFAULT }
+	)
+	
 	@POST
 	@Consumes({ OslcMediaType.APPLICATION_RDF_XML,
 			OslcMediaType.APPLICATION_XML, OslcMediaType.APPLICATION_JSON })
 	@Produces({ OslcMediaType.APPLICATION_RDF_XML,
 			OslcMediaType.APPLICATION_XML, OslcMediaType.APPLICATION_JSON })
-	public Response addChangeRequest(
+	public Response addRequirement(
 			@PathParam("productId") final String productId,
-			final OSLCRequirement changeRequest) throws IOException,
+			final OSLCRequirement requirement) throws IOException,
 			ServletException
 
 	{
-		URI uri = changeRequest.getAbout();
+		URI uri = requirement.getAbout();
 		httpServletResponse.sendRedirect(uri.toString());
 		return Response.seeOther(uri).build();
 	}
@@ -559,7 +571,7 @@ public class BlueworksRequirementService
 	@GET
 	@Path("creator")
 	@Consumes({ MediaType.WILDCARD })
-	public void changeRequestCreator(
+	public void requirementCreator(
 			@PathParam("productId") final String productId) throws IOException,
 			ServletException {
 		try {
@@ -571,7 +583,7 @@ public class BlueworksRequirementService
 					ApplicationManager.getServletBase());
 
 			RequestDispatcher rd = httpServletRequest
-					.getRequestDispatcher("/rm/changerequest_creator.jsp");
+					.getRequestDispatcher("/jsps/requirement_creator.jsp");
 			rd.forward(httpServletRequest, httpServletResponse);
 
 		} catch (Exception e) {
@@ -596,16 +608,13 @@ public class BlueworksRequirementService
 	@POST
 	@Path("creator")
 	@Consumes({ MediaType.APPLICATION_FORM_URLENCODED })
-	public void createHtmlChangeRequest(
+	public void createHtmlRequirement(
 			@PathParam("productId") final String productId,
-			@FormParam("component") final String component,
 			@FormParam("version") final String version,
 			@FormParam("summary") final String summary,
-			@FormParam("op_sys") final String op_sys,
-			@FormParam("platform") final String platform,
 			@FormParam("description") final String description) {
 		throw new RuntimeException(
-				"creating new blueworks requirements is unsupported in this version.");
+				"Creating new Blueworks requirements is unsupported in this version.");
 	}
 
 	/**
@@ -624,15 +633,15 @@ public class BlueworksRequirementService
 	@PUT
 	@Consumes({ OslcMediaType.APPLICATION_RDF_XML,
 			OslcMediaType.APPLICATION_XML, OslcMediaType.APPLICATION_JSON })
-	@Path("{changeRequestId}")
-	public Response updateChangeRequest(
+	@Path("{requirementId}")
+	public Response updateRequirement(
 			@HeaderParam("If-Match") final String eTagHeader,
-			@PathParam("changeRequestId") final String changeRequestId,
+			@PathParam("requirementId") final String requirementId,
 			final OSLCRequirement changeRequest) throws IOException,
 			ServletException {
 
 		throw new RuntimeException(
-				"updating blueworks requirements is unsupported in this version.");
+				"Updating Blueworks requirements is unsupported in this version.");
 	}
 
 	private static void setETagHeader(final String eTagFromRequirement,

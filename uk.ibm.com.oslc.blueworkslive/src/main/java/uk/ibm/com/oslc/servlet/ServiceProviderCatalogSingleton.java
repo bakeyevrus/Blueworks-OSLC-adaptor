@@ -242,8 +242,8 @@ public class ServiceProviderCatalogSingleton {
 
 		try {
 			
-			// IRequirementsConnector bc =
-			//ApplicationManager.getRequirementsConnector(httpServletRequest);
+			IRequirementsConnector bc =
+			ApplicationManager.getRequirementsConnector(httpServletRequest);
 
 			Map<String, String> sp = IRequirementsConnector
 					.getInstance().getServiceProviderCatalog();

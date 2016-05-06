@@ -1,8 +1,7 @@
 package uk.ibm.com.oslc.blueworks;
 
-import uk.ibm.com.oslc.rm.RequirementInfo;
 
-public class BlueworksProcessActivity{
+public class BlueworksProcessActivity {
 
 	private static String TYPE = "ACTIVITY";
 
@@ -107,14 +106,4 @@ public class BlueworksProcessActivity{
 				+ activityName + ", activityType=" + activityType
 				+ ", activityMajorType=" + activityMajorType + "]";
 	}
-
-	public RequirementInfo toRequirementInfo() {
-
-		RequirementInfo requirementInfo = new RequirementInfo(activityId,
-				activityName, activityType, activityDocumentation, null,
-				activityMajorType, processId, null);
-
-		return requirementInfo;
-	}
-
 }

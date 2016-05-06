@@ -1,10 +1,7 @@
 package uk.ibm.com.oslc.blueworks;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import uk.ibm.com.oslc.rm.RequirementInfo;
 
 public class BlueworksProcess {
 	
@@ -76,30 +73,5 @@ public class BlueworksProcess {
 	
 	public String getType() {
 		return TYPE;
-	}
-
-	public RequirementInfo toRequirementInfo() {
-
-		// First get any child activities into the right format
-
-		List<RequirementInfo> activityRequirementInfos = new ArrayList<RequirementInfo>();
-
-		// For each process activity, turn it into a requirement info object and
-		// add it to our list
-		for (BlueworksProcessActivity blueworksActivity : processActivities) {
-			RequirementInfo blueworksActivityAsRequirementInfo = blueworksActivity
-					.toRequirementInfo();
-			activityRequirementInfos.add(blueworksActivityAsRequirementInfo);
-		}
-
-		// Now we'll create the master object containing the fields from the
-		// process plus the child activities
-		// TODO - pass through the dates properly
-		RequirementInfo requirementInfo = new RequirementInfo(processId, name,
-				"PROCESS", "", modifiedDate, modifiedUserName, "", "",
-				activityRequirementInfos);
-
-		return requirementInfo;
-
 	}
 }

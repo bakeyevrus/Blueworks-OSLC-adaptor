@@ -20,7 +20,7 @@
 
 
 <%
-OSLCRequirement requirement = (OSLCRequirement) request.getAttribute("changeRequest");
+OSLCRequirement requirement = (OSLCRequirement) request.getAttribute("requirement");
 String baseUri = (String) request.getAttribute("baseUri");
 
 %>
@@ -82,7 +82,7 @@ th {
 				<tr>
 					<th><label for="id" class="headingText">Process Name:</label></th>
 					<td><label for="id" class="labelText"><%= requirement.getTitle() %></label></td>
-					<th><label for="id" class="headingText">ProcessType:</label></th>
+					<th><label for="id" class="headingText">Process Type:</label></th>
 					<td><label for="id" class="labelText"><%= requirement.getRequirementType() %></label></td>
 					
 				</tr>

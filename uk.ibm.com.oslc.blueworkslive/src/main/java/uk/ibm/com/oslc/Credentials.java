@@ -21,6 +21,7 @@ package uk.ibm.com.oslc;
  * @author Samuel Padgett <spadgett@us.ibm.com>
  */
 public class Credentials {
+	
 	private String username;
 	private String password;
 

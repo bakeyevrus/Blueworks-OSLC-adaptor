@@ -40,7 +40,7 @@ String baseUri = (String) request.getAttribute("baseUri");
 	<div id="contents">
 	    <div id="bwlLogin">
 	       <div id="contents">
-           <p id="errorMessage"><label for="id" class="labelText">Creating new processes is not supported through the BlueworksLive api.</label></p>
+           <p id="errorMessage"><label for="id" class="labelText">Creating new processes is not supported through the BlueworksLive API.</label></p>
 		   </div>
 		</div>
 	</div>

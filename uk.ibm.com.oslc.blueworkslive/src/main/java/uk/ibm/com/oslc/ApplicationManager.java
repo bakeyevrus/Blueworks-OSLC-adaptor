@@ -24,22 +24,15 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.WebApplicationException;
 
 import org.eclipse.lyo.oslc4j.client.ServiceProviderRegistryURIs;
 
 import uk.ibm.com.oslc.rm.IRequirementsConnector;
 import uk.ibm.com.oslc.servlet.CredentialsFilter;
 
-import com.j2bugzilla.base.Product;
-import com.j2bugzilla.rpc.GetProduct;
-
 
 public class ApplicationManager implements ServletContextListener  {
 
-
-
-	
 	private static String servletBase = null;
 	private static String servicePath = null;
 	private static String admin = null;
@@ -91,7 +84,7 @@ public class ApplicationManager implements ServletContextListener  {
     }
 
     /**
-     * get BugzillaConnector from the HttpSession
+     * get Blueworks connector from the HttpSession
      * 
      * The connector should be placed in the session by the CredentialsFilter servlet filter
      * 
@@ -133,9 +126,6 @@ public class ApplicationManager implements ServletContextListener  {
         } 
         return scheme + "://" + HOST + port + servletContext.getContextPath();
     }
-
-   
-
    
 	public static String getServletBase() {
 		return servletBase;

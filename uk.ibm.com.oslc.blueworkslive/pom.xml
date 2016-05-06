@@ -100,7 +100,7 @@
     </dependencies>
 
     <build>
-        <finalName>bwloslc adaptor</finalName>
+        <finalName>bwloslc</finalName>
         <plugins>
 
             <plugin>
