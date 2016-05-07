@@ -86,12 +86,28 @@ public class BlueworksRequirementService
 		super();
 	}
 
-	@OslcDialogs({ @OslcDialog(title = "Blueworks Live Process Selection Dialog", label = "Blueworks Live Process Selection Dialog", uri = "/{productId}/requirements/selector", hintWidth = "510px", hintHeight = "500px", resourceTypes = { Constants.TYPE_REQUIREMENT }, usages = { OslcConstants.OSLC_USAGE_DEFAULT })
-
-	})
-	// TODO: RB - now working
-	@OslcQueryCapability(title = "Requirement Query Capability", label = "Requirement Catalog Query", resourceShape = OslcConstants.PATH_RESOURCE_SHAPES
-			+ "/" + Constants.PATH_REQUIREMENT, resourceTypes = { Constants.TYPE_REQUIREMENT }, usages = { OslcConstants.OSLC_USAGE_DEFAULT })
+	@OslcDialogs
+	(
+			{ @OslcDialog
+				(
+						title = "Blueworks Live Process Selection Dialog", 
+						label = "Blueworks Live Process Selection Dialog", 
+						uri = "/{productId}/requirements/selector", 
+						hintWidth = "510px", 
+						hintHeight = "500px", 
+						resourceTypes = { Constants.TYPE_REQUIREMENT }, 
+						usages = { OslcConstants.OSLC_USAGE_DEFAULT }
+				)}
+	)
+	// TODO: RB - not working
+	@OslcQueryCapability
+	(
+			title = "Requirement Query Capability", 
+			label = "Requirement Catalog Query", 
+			resourceShape = OslcConstants.PATH_RESOURCE_SHAPES + "/" + Constants.PATH_REQUIREMENT, 
+			resourceTypes = { Constants.TYPE_REQUIREMENT }, 
+			usages = { OslcConstants.OSLC_USAGE_DEFAULT }
+	)
 	/**
 	 * RDF/XML, XML and JSON representation of a change request collection
 	 * 
@@ -270,11 +286,12 @@ public class BlueworksRequirementService
 			httpServletRequest.setAttribute(
 					OSLC4JConstants.OSLC4J_SELECTED_PROPERTIES,
 					QueryUtils.invertSelectedProperties(properties));
-
-			return Response
+			
+			Response out = Response
 					.ok(requirement)
 					.header(Constants.HDR_OSLC_VERSION,
 							Constants.OSLC_VERSION_V2).build();
+			return out;
 		}
 
 		throw new WebApplicationException(Status.NOT_FOUND);
@@ -329,8 +346,6 @@ public class BlueworksRequirementService
 
 			// Use the HTML representation of a change request as the large
 			// preview as well
-			// Why this?
-			// TODO: Remove and check for bugs
 			final Preview largePreview = new Preview();
 			largePreview.setHintHeight("18em");
 			largePreview.setHintWidth("41em");
@@ -389,8 +404,8 @@ public class BlueworksRequirementService
 	 * If called without a "terms" parameter, forwards to
 	 * changerequest_selector.jsp to build the html for the IFrame
 	 * 
-	 * If called with a "terms" parameter, sends a Bug search to Bugzilla and
-	 * then forwards to changerequest_filtered_json.jsp to build a JSON response
+	 * If called with a "terms" parameter, sends a process search to Blueworks and
+	 * then forwards to requirement_filtered_json.jsp to build a JSON response
 	 * 
 	 * 
 	 * @param terms
@@ -404,7 +419,7 @@ public class BlueworksRequirementService
 	public void requirementSelector(@QueryParam("terms") final String terms,
 			@PathParam("productId") final String productId)
 			throws ServletException, IOException {
-		// int productIdNum = Integer.parseInt(productId);
+		
 		httpServletRequest.setAttribute("productId", productId);
 		httpServletRequest.setAttribute("selectionUri", uriInfo
 				.getAbsolutePath().toString());
@@ -485,7 +500,7 @@ public class BlueworksRequirementService
 	 * @throws URISyntaxException
 	 */
 	@GET
-	@Path("{changeRequestId}/largePreview")
+	@Path("{requirementId}/largePreview")
 	@Produces({ MediaType.TEXT_HTML })
 	public void largePreview(@PathParam("productId") final String productId,
 			@PathParam("requirementId") final String requirementId)
@@ -709,9 +724,9 @@ public class BlueworksRequirementService
 				requirement.setServiceProvider(ServiceProviderCatalogSingleton
 						.getServiceProvider(httpServletRequest, productId)
 						.getAbout());
-				setInstanceShape(requirement);
-				addChildrenToList(process, results, productId);
+				setInstanceShape(requirement);				
 				results.add(requirement);
+				addChildrenToList(process, results, productId);
 			}
 			httpServletRequest.setAttribute("results", results);
 
@@ -736,7 +751,7 @@ public class BlueworksRequirementService
 									child.getActivityId());
 					childReq.setAbout(getAboutURI(productId + "/requirements/"
 							+ childReq.getIdentifier()));
-					childReq.setDisplayIndent(" -");
+					childReq.setDisplayIndent("--");
 					setInstanceShape(childReq);
 					results.add(childReq);
 				} catch (URISyntaxException e) {

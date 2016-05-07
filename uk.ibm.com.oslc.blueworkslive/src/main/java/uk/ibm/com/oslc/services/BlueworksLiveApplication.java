@@ -96,7 +96,7 @@ public class BlueworksLiveApplication extends OslcWinkApplication {
     		System.err.println("BlueworksLiveApplication failed to initialize");
     	}
 
-        RESOURCE_SHAPE_PATH_TO_RESOURCE_CLASS_MAP.put(Constants.PATH_CHANGE_REQUEST, OSLCRequirement.class);
+        RESOURCE_SHAPE_PATH_TO_RESOURCE_CLASS_MAP.put(Constants.PATH_REQUIREMENT, OSLCRequirement.class);
         
     }
 

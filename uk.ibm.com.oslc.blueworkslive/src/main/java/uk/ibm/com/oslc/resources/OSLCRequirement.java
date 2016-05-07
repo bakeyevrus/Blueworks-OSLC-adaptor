@@ -22,9 +22,13 @@ import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
+import org.eclipse.lyo.oslc4j.core.annotation.OslcDescription;
 import org.eclipse.lyo.oslc4j.core.annotation.OslcName;
 import org.eclipse.lyo.oslc4j.core.annotation.OslcNamespace;
+import org.eclipse.lyo.oslc4j.core.annotation.OslcPropertyDefinition;
+import org.eclipse.lyo.oslc4j.core.annotation.OslcReadOnly;
 import org.eclipse.lyo.oslc4j.core.annotation.OslcResourceShape;
+import org.eclipse.lyo.oslc4j.core.annotation.OslcTitle;
 
 import uk.ibm.com.oslc.Constants;
 import uk.ibm.com.oslc.blueworks.BlueworksProcess;
@@ -33,7 +37,7 @@ import uk.ibm.com.oslc.rm.IRequirementsConnector;
 
 //OSLC4J should give an rdf:type of oslc_rm:Requrements
 @OslcNamespace(Constants.REQUIREMENTS_MANAGEMENT_NAMESPACE)
-@OslcName(Constants.TYPE_REQUIREMENT)
+@OslcName(Constants.REQUIREMENT)
 @OslcResourceShape(title = "Requirements Management Resource Shape", describes = Constants.TYPE_REQUIREMENT)
 public final class OSLCRequirement extends Requirement {
 
@@ -47,14 +51,13 @@ public final class OSLCRequirement extends Requirement {
 
 	// Blueworks extended attributes beyond OSLC base Requirement
 	private String requirementType = null;
-	// TODO: RB - What is subtype?
 	// TODO: RB - OSLC Annotations to parameters
 	private String requirementSubType = null;
 	private String parentName = null;
 	private String childrenNames = "";
 	private String displayIndent = "";
 	private String lastModifiedBy = null;
-
+	
 	public String getDisplayIndent() {
 		return displayIndent;
 	}
@@ -66,7 +69,7 @@ public final class OSLCRequirement extends Requirement {
 	public void setIdentifier(int identifier) throws URISyntaxException {
 		setIdentifier(Integer.toString(identifier));
 	}
-
+	
 	public String getRequirementType() {
 		return requirementType;
 	}
@@ -75,7 +78,6 @@ public final class OSLCRequirement extends Requirement {
 		this.requirementType = product;
 	}
 
-	// TODO: RB - Possible remove this property
 	public String getRequirementSubType() {
 		return requirementSubType;
 	}

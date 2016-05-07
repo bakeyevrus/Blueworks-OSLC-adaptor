@@ -30,6 +30,7 @@ public interface Constants
     public static String FOAF_NAMESPACE_PREFIX                       = "foaf";
     public static String QUALITY_MANAGEMENT_NAMESPACE                = "http://open-services.net/ns/qm#";
     public static String QUALITY_MANAGEMENT_PREFIX                   = "oslc_qm";
+    public static String REQUIREMENTS_MANAGEMENT_DOMAIN              = "http://open-services.net/ns/rm#";
     public static String REQUIREMENTS_MANAGEMENT_NAMESPACE           = "http://open-services.net/ns/rm#";
     public static String REQUIREMENTS_MANAGEMENT_PREFIX              = "oslc_rm";
     public static String SOFTWARE_CONFIGURATION_MANAGEMENT_NAMESPACE = "http://open-services.net/ns/scm#";
@@ -37,6 +38,7 @@ public interface Constants
 
 
     public static String CHANGE_REQUEST             = "ChangeRequest";
+    public static String REQUIREMENT        	    = "Requirement";
     public static String TYPE_CHANGE_REQUEST        = CHANGE_MANAGEMENT_NAMESPACE + "ChangeRequest";
     public static String TYPE_CHANGE_SET            = SOFTWARE_CONFIGURATION_MANAGEMENT_NAMESPACE + "ChangeSet";
     public static String TYPE_DISCUSSION            = OslcConstants.OSLC_CORE_NAMESPACE + "Discussion";
