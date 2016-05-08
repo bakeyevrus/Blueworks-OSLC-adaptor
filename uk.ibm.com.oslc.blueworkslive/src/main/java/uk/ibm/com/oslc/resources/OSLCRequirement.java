@@ -51,7 +51,6 @@ public final class OSLCRequirement extends Requirement {
 
 	// Blueworks extended attributes beyond OSLC base Requirement
 	private String requirementType = null;
-	// TODO: RB - OSLC Annotations to parameters
 	private String requirementSubType = null;
 	private String parentName = null;
 	private String childrenNames = "";

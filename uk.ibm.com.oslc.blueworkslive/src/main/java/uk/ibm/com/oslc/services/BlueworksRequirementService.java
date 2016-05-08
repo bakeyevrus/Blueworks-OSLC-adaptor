@@ -99,7 +99,7 @@ public class BlueworksRequirementService
 						usages = { OslcConstants.OSLC_USAGE_DEFAULT }
 				)}
 	)
-	// TODO: RB - not working
+	
 	@OslcQueryCapability
 	(
 			title = "Requirement Query Capability", 
@@ -706,10 +706,6 @@ public class BlueworksRequirementService
 			final String productId, final String terms)
 			throws ServletException, IOException {
 		try {
-			// TODO: RB - Do we need this?
-			//final IRequirementsConnector bc = ApplicationManager
-			//		.getRequirementsConnector(httpServletRequest);
-
 			List<OSLCRequirement> results = new ArrayList<OSLCRequirement>();
 
 			List<BlueworksProcess> processes = IRequirementsConnector
