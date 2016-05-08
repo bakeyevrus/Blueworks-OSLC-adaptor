@@ -18,8 +18,8 @@
 
 <%@page import="uk.ibm.com.oslc.resources.OSLCRequirement"%>
 <%@page import="org.eclipse.lyo.oslc4j.core.model.ServiceProvider"%>
-<%@page contentType="text/html" language="java" pageEncoding="UTF-8" %>
-<%@page import="java.util.List" %>
+<%@ page contentType="text/html" language="java" pageEncoding="UTF-8" %>
+<%@ page import="java.util.List" %>
 <%
     List<OSLCRequirement> changeRequests = (List<OSLCRequirement>) request.getAttribute("results");
 	ServiceProvider serviceProvider = (ServiceProvider) request.getAttribute("serviceProvider");

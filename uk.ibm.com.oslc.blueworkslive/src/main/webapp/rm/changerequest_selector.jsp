@@ -16,6 +16,7 @@
     Michael Fiedler	 - adapted for OSLC4J
 --%>
 <%@ page contentType="text/html" language="java" pageEncoding="UTF-8" %>
+<%@ page import="com.j2bugzilla.base.*" %>
 
 <%
 	String productId = (String) request.getAttribute("productId");
@@ -28,7 +29,7 @@
 <title>BlueworksLive OSLC Adapter: Resource Selector</title>
 
 
-<script type="text/javascript" src="../../../blueworks.js"></script>
+<script type="text/javascript" src="../../../bugzilla.js"></script>
 
 <!--  link href="<%=baseURL %>/stylesheets/blueworkslive.css" rel="stylesheet" type="text/css"-->
 <style type='text/css'>#pageHeaderContent .customTextLogo, #page-header .customTextLogo, .headerLogoOnPlayback .customTextLogo, .headerLogoOnViewer .customTextLogo {display: none;}</style>

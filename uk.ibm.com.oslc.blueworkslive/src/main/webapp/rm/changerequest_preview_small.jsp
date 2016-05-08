@@ -16,11 +16,13 @@
     Michael Fiedler	 - adapted for OSLC4J
  -->
 <%@ page contentType="text/html" language="java" pageEncoding="UTF-8" %>
+<%@ page import="java.net.*,java.util.*,java.text.SimpleDateFormat" %>
 <%@ page import="uk.ibm.com.oslc.resources.OSLCRequirement" %>
+<%@ page import="uk.ibm.com.oslc.resources.Person" %>
 
 
 <%
-OSLCRequirement requirement = (OSLCRequirement) request.getAttribute("requirement");
+OSLCRequirement requirement = (OSLCRequirement)request.getAttribute("changeRequest");
 String baseUri = (String) request.getAttribute("baseUri");
 
 %>
@@ -36,7 +38,7 @@ String baseUri = (String) request.getAttribute("baseUri");
 <script type="text/javascript">
         function showHideDescription() {
             var processType = '${processType}';
-            if (processType == "PROCESS")
+            if (processType =="PROCESS")
             {
                var descriptionBlock = document.getElementById("descriptionBlock");
                descriptionBlock.style.display = "none";
@@ -50,7 +52,7 @@ String baseUri = (String) request.getAttribute("baseUri");
             }
         }
 </script>
-<title>Requirement: <%= requirement.getTitle() %>(<%= requirement.getIdentifier() %>))</title>
+<title>Change Request: <%= requirement.getTitle() %>(<%= requirement.getIdentifier() %>))</title>
 
 
 <style type='text/css'>#pageHeaderContent .customTextLogo, #page-header .customTextLogo, .headerLogoOnPlayback .customTextLogo, .headerLogoOnViewer .customTextLogo {display: none;}</style>
@@ -82,7 +84,7 @@ th {
 				<tr>
 					<th><label for="id" class="headingText">Process Name:</label></th>
 					<td><label for="id" class="labelText"><%= requirement.getTitle() %></label></td>
-					<th><label for="id" class="headingText">Process Type:</label></th>
+					<th><label for="id" class="headingText">ProcessType:</label></th>
 					<td><label for="id" class="labelText"><%= requirement.getRequirementType() %></label></td>
 					
 				</tr>

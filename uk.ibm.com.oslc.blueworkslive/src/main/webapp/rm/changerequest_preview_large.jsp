@@ -15,14 +15,24 @@
     Sam Padgett		 - initial API and implementation
     Michael Fiedler	 - adapt for OSLC4J
 --%>
-<%@ page contentType="text/html" language="java" pageEncoding="UTF-8"%>
+<%@ page contentType="text/html" language="java" pageEncoding="UTF-8" %>
+<%@ page import="java.net.*,java.util.*" %>
+<%@ page import="java.net.*,java.util.*,java.text.SimpleDateFormat" %>
+<%@ page import="uk.ibm.com.oslc.resources.OSLCRequirement" %>
+<%@ page import="uk.ibm.com.oslc.resources.Person" %>
+<%
+OSLCRequirement requirement = (OSLCRequirement)request.getAttribute("changeRequest");
 
+String title = requirement.getTitle();
+String identifier = requirement.getIdentifier()+""; 
+
+%>
 <html>
 <head>
-<title>No support for large preview</title>
+<title>Change Request: <%=title %> (<%=identifier %>)</title>
 
 </head>
-<body>Not supported in this version of the Blueworks Live OSLC
-	adapter.
+<body>
+Not supported in this version of the blueworks live oslc adapter.
 </body>
 </html>
